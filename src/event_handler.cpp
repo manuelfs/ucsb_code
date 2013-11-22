@@ -15,6 +15,7 @@
 #include <cassert>
 #include <algorithm>
 #include <functional>
+#include "TString.h"
 #include "TChain.h"
 #include "TTree.h"
 #include "TBranch.h"
@@ -32,7 +33,7 @@
 #include "math.hpp"
 #include "in_json_2012.hpp"
 
-#define NVar 2
+#define NVar 3
 
 
 const double EventHandler::CSVTCut(0.898);
@@ -798,6 +799,20 @@ bool EventHandler::PassesTChiMassCut(int mChi, int mLSP) const{
   return true;
 }
 
+
+bool EventHandler::PassesSignalMassCut(int mGlu, int mLSP) const{
+  if (mGlu<0||mLSP<0) return true;
+  TString mGlu_s=model_params->c_str();
+  mGlu_s.Remove(0, mGlu_s.First("_")+1);
+  TString mLSP_s=mGlu_s;
+  mGlu_s.Remove(mGlu_s.First("_"), mGlu_s.Sizeof());
+  mLSP_s.Remove(0, mLSP_s.First("_")+1);
+  mLSP_s.Remove(mLSP_s.First(" "), mLSP_s.Sizeof());
+  if (mGlu == mGlu_s.Atoi() && mLSP == mLSP_s.Atoi()) return true;
+  else return false;
+}
+
+
 int GetSimpleParticle(const double &id){
   const int iid(static_cast<int>(fabs(id)));
   switch(iid){
@@ -943,10 +958,10 @@ int GetType(const std::pair<int,int> &bo){
 void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries){
   //Variables
   TFile file(outFileName.c_str(), "recreate");
-  int Nbins[] = {15,50,50};
-  double limits[][2] = {{0,15},{-6,6},{0,15}};
-  TString Variable[] = {"NGoodJets","jets_AK5PF_eta", ""};
-  TString VarTitle[] = {"Number of Good Jets","jets_AK5PF_eta", ""};
+  int Nbins[] = {14,25,15};
+  double limits[][2] = {{.5,14.5},{0,2500},{0,750}};
+  TString Variable[] = {"NGoodJets","HT", "MET"};
+  TString VarTitle[] = {"Number of Good Jets","H_{T}", "MET"};
   TCanvas can("can","8 TeV Vs 13/14 TeV comparison");
   TH1F* hVar[NVar];
   for(int iVariable(0); iVariable< NVar; ++iVariable){
@@ -961,13 +976,19 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
     }
     timer.Iterate();
     GetEntry(i);
-   
     for(int iVariable(0); iVariable< NVar; ++iVariable ){
       double ValVariable(0); 
       switch(iVariable){
       case 0: 
 	ValVariable= GetNumGoodJets();
 	break;      
+      case 1: 
+	ValVariable= GetHT(false,false);
+	break;      
+      case 2: 
+	if(pfmets_et->size()<=0) ValVariable= -1000;
+	else ValVariable= pfmets_et->at(0);
+	break; 
       }
       hVar[iVariable]->Fill(ValVariable);
     }//

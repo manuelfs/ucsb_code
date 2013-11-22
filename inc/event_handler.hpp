@@ -118,7 +118,7 @@ private:
   bool PassesBadJetFilter() const;
 
   bool PassesTChiMassCut(int=-1, int=1) const;
-
+  bool PassesSignalMassCut(int mGlu=-1, int mLSP=1) const;
   void GetHiggsBJetPairing() const;
   void GetSortedBJets() const;
 
@@ -136,7 +136,7 @@ private:
   int GetNumCSVMJets() const;
   int GetNumCSVLJets() const;
 
-  bool isGoodJet(const unsigned int, const bool=true, const double=20.0, const double=2.4, const bool=true) const;
+  bool isGoodJet(const unsigned int, const bool=true, const double=40.0, const double=2.4, const bool=true) const;
   bool isProblemJet(const unsigned int) const;
   bool jetPassLooseID(const unsigned int) const;
 
