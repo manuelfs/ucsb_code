@@ -65,6 +65,8 @@ int main(int argc, char *argv[]){
   WeightCalculator w(19399);
   EventHandler eH(inFilename, false, w.GetWeight(inFilename), isfast); 
   
+  if(Nentries > eH.GetTotalEntries()) Nentries = eH.GetTotalEntries();
+
   time(&curTime);
   cout<<"Getting started takes "<<difftime(curTime,startTime)<<" seconds"<<endl;
   eH.MakePlots13Tev(outFilename, Nentries);
