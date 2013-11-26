@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export Nevents=20000
+export Nevents=2000000
 
 # Signal @14TeV: 40,321 entries
 ./scripts/make_plots.exe -i SMS-T1tttt_2J_mGo-845to3000_mLSP-1to1355_TuneZ2star_14TeV-madgraph-tauola_Summer12-START53_V7C_FSIM_PU_S12-v1_AODSIM_UCSB1949reshuf_v71  -n $Nevents -m 1145_800_
