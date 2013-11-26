@@ -27,13 +27,14 @@ int main(int argc, char *argv[]){
         hppFile << "#include \"TBranch.h\"\n\n";
 
         hppFile << "class cfA{\n";
+        hppFile << "public:\n";
+        hppFile << "  int GetTotalEntries() const;\n";
         hppFile << "protected:\n";
         hppFile << "  cfA(const std::string&, const bool);\n";
         hppFile << "  TChain chainA, chainB;\n";
         hppFile << "  TChain* GetChainA();\n";
         hppFile << "  TChain* GetChainB();\n";
         hppFile << "  std::string GetSampleName() const;\n";
-        hppFile << "  int GetTotalEntries() const;\n";
         hppFile << "  int GetEntry(const unsigned int);\n";
         hppFile << "  void SetFile(const std::string&, const bool);\n\n";
 
