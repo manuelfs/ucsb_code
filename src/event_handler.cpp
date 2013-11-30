@@ -33,7 +33,7 @@
 #include "math.hpp"
 #include "in_json_2012.hpp"
 
-#define NVar 3
+#define NVar 9
 
 
 const double EventHandler::CSVTCut(0.898);
@@ -958,16 +958,19 @@ int GetType(const std::pair<int,int> &bo){
 void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries){
   //Variables
   TFile file(outFileName.c_str(), "recreate");
-  int Nbins[] = {14,25,15};
-  double limits[][2] = {{.5,14.5},{0,2500},{0,750}};
-  TString Variable[] = {"NGoodJets","HT", "MET"};
-  TString VarTitle[] = {"Number of Good Jets","H_{T}", "MET"};
+  int Nbins[] = {14,25,15,30,24,15,10,10,30};
+  double limits[][2] = {{.5,14.5},{0,2500},{0,750},{0,1500},{0,1200},{0,750},{0,500},{0,500},{0,300}};
+  TString Variable[] = {"NGoodJets","HT", "MET","Firstpt", "Secondpt", "Thirdpt","Fourthpt", "Fifthpt", "ptofAllJets" };
+  TString VarTitle[] = {"Number of Good Jets","H_{T}", "MET", "p_{T} of first jet", "p_{T} of second jet",  "p_{T} of third jet", "p_{T} of fourth jet",  "p_{T} of fith jet", "p_{T} of all jets"};
   TCanvas can("can","8 TeV Vs 13/14 TeV comparison");
   TH1F* hVar[NVar];
+  cout<<"open eventhandler"<<endl;
+  double ptThresh=100;
   for(int iVariable(0); iVariable< NVar; ++iVariable){
     hVar[iVariable] = new TH1F(Variable[iVariable],VarTitle[iVariable],Nbins[iVariable], limits[iVariable][0], limits[iVariable][1]);
   }
-  
+  cout<<"Starting loop over entries"<<endl;
+
   Timer timer(Nentries);
   timer.Start();
   for(int i(0); i<Nentries; ++i){
@@ -976,37 +979,60 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
     }
     timer.Iterate();
     GetEntry(i);
+
     for(int iVariable(0); iVariable< NVar; ++iVariable ){
       double ValVariable(0); 
+      
       switch(iVariable){
       case 0: 
-	ValVariable= GetNumGoodJets();
+	ValVariable= GetNumGoodJets(ptThresh);
 	break;      
       case 1: 
 	ValVariable= GetHT(false,false);
 	break;      
       case 2: 
-	if(pfmets_et->size()<=0) ValVariable= -1000;
+	if(pfmets_et->size()<=0) continue;
 	else ValVariable= pfmets_et->at(0);
+	break;
+      case 3: 
+	if(jets_AK5PF_pt->size()<=0 && isGoodJet(0, true, ptThresh, 2.4, true)) continue;
+	else ValVariable= jets_AK5PF_pt->at(0);	
 	break; 
-      }
+      case 4: 
+	if(jets_AK5PF_pt->size()<=1 && isGoodJet(1, true, ptThresh, 2.4, true)) continue;
+	else ValVariable= jets_AK5PF_pt->at(1);
+	break; 
+      case 5: 
+	if(jets_AK5PF_pt->size()<=2 && isGoodJet(2, true, ptThresh, 2.4, true)) continue;
+	else ValVariable= jets_AK5PF_pt->at(2);
+	break; 
+      case 6: 
+	if(jets_AK5PF_pt->size()<=3 && isGoodJet(3, true, ptThresh, 2.4, true)) continue;
+	else ValVariable= jets_AK5PF_pt->at(3);
+	break; 
+      case 7: 
+	if(jets_AK5PF_pt->size()<=4 && isGoodJet(4, true, ptThresh, 2.4, true)) continue;
+	else ValVariable= jets_AK5PF_pt->at(4);
+	break; 
+      case 8:  
+	for(unsigned int ijets(0); ijets<jets_AK5PF_pt->size(); ++ijets){
+	  if(isGoodJet(ijets, true, ptThresh, 2.4, true)){
+	    hVar[iVariable]->Fill(jets_AK5PF_pt->at(ijets));
+	  }
+	}
+	continue;
+	break;	
+      } // Switch iVariable 
       hVar[iVariable]->Fill(ValVariable);
-    }//
-  }//ends loop over all events
+    }// Loop over all variables
 
+  }// Loop over all events
+   
+  
   //cout<<"Finished looping over events"<<endl;
   file.Write();
   file.Close();
   cout<<"Finished saving file "<<outFileName<<endl;
-
-//   for(int iVariable(0); iVariable < NVar; iVariable++){    
-//     cout<<"Drawing histo "<<iVariable<<endl;
-//     hVar[iVariable]->Draw(); 
-//     TString pName = "plots/"; pName += Variable[iVariable]; pName += ".pdf";
-//     can.SaveAs(pName);
-//     cout<<"Deleting histo "<<iVariable<<endl;
-//     hVar[iVariable]->Delete();    
-//   }
     
 }
 
@@ -2193,10 +2219,10 @@ bool EventHandler::PassesBTaggingCut() const{
   return GetNumCSVTJets()>=2 && GetNumCSVMJets()>=3 && GetNumCSVLJets()>=4;
 }
 
-int EventHandler::GetNumGoodJets() const{
+int EventHandler::GetNumGoodJets(double ptThresh) const{
   int numGoodJets(0);
   for(unsigned int i(0); i<jets_AK5PF_pt->size(); ++i){
-    if(isGoodJet(i)) ++numGoodJets;
+    if(isGoodJet(i, true, ptThresh, 2.4, true )) ++numGoodJets;
   }
   return numGoodJets;
 }

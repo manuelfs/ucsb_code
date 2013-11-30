@@ -131,7 +131,7 @@ private:
   int GetPBNR() const;
   double GetMinDeltaPhiMET(const unsigned int) const;
 
-  int GetNumGoodJets() const;
+  int GetNumGoodJets(double ptThresh=40) const;
   int GetNumCSVTJets() const;
   int GetNumCSVMJets() const;
   int GetNumCSVLJets() const;
