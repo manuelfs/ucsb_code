@@ -1,9 +1,12 @@
 #! /bin/bash
 
-export Nevents=2000000
+export Nevents=1000
 
 # Signal @14TeV: 40,321 entries
 ./scripts/make_plots.exe -i SMS-T1tttt_2J_mGo-845to3000_mLSP-1to1355_TuneZ2star_14TeV-madgraph-tauola_Summer12-START53_V7C_FSIM_PU_S12-v1_AODSIM_UCSB1949reshuf_v71  -n $Nevents -m 1145_800_
+
+# Signal @14TeV:
+./scripts/make_plots.exe -i SMS-T1tttt_2J_mGo-845to3000_mLSP-1to1355_TuneZ2star_14TeV-madgraph-tauola_Summer12-START53_V7C_FSIM_PU_S12-v1_AODSIM_UCSB1949reshuf_v71  -n $Nevents -m 1145_500_
 # Signal @8TeV: 127,823 entries
 ./scripts/make_plots.exe -i  SMS-MadGraph_Pythia6Zstar_8TeV_T1tttt_2J_mGo-1100to1400_mLSP-525to1000_25GeVX25GeV_Binning_Summer12-START52_V9_FSIM-v2_AODSIM_UCSB1739reshuf_v68   -n $Nevents -m 1150_800_
 

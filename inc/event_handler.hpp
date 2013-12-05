@@ -144,9 +144,29 @@ private:
   bool isVetoMuon(const unsigned int) const;
   bool isVetoTau(const unsigned int) const;
 
+  bool isRA4Electron(const unsigned int) const;
+  bool isRA4Muon(const unsigned int) const;
+
+  int GetNumVetoLeptons() const;
   int GetNumVetoElectrons() const;
   int GetNumVetoMuons() const;
   int GetNumVetoTaus() const;
+  int GetVetoElectron(int nth_highest_pt=1) const;
+  int GetVetoMuon(int nth_highest_pt=1) const;
+  float GetVetoLeptonPt(int nth_highest_pt, bool & isElectron) const;
+  float GetVetoLeptonPhi(int nth_highest_pt=1) const;
+  float GetVetoLeptonDeltaPhi(int nth_highest_pt=1) const;
+  float GetVetoLeptonMt(int nth_highest_pt=1) const;
+
+  int GetNumRA4Leptons() const;
+  int GetNumRA4Electrons() const;
+  int GetNumRA4Muons() const;
+  int GetRA4Electron(int nth_highest_pt=1) const;
+  int GetRA4Muon(int nth_highest_pt=1) const;
+  float GetRA4LeptonPt(int nth_highest_pt, bool & isElectron) const;
+  float GetRA4LeptonPhi(int nth_highest_pt=1) const;
+  float GetRA4LeptonDeltaPhi(int nth_highest_pt=1) const;
+  float GetRA4LeptonMt(int nth_highest_pt=1) const;
 
   bool isIsoTrack(const unsigned int, const double=10.0) const;
   bool isQualityTrack(const unsigned int) const;

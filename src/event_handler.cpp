@@ -33,7 +33,8 @@
 #include "math.hpp"
 #include "in_json_2012.hpp"
 
-#define NVar 9
+#define Nthresh 7
+#define NVar 30
 
 
 const double EventHandler::CSVTCut(0.898);
@@ -958,19 +959,42 @@ int GetType(const std::pair<int,int> &bo){
 void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries){
   //Variables
   TFile file(outFileName.c_str(), "recreate");
-  int Nbins[] = {14,25,15,30,24,15,10,10,30};
-  double limits[][2] = {{.5,14.5},{0,2500},{0,750},{0,1500},{0,1200},{0,750},{0,500},{0,500},{0,300}};
-  TString Variable[] = {"NGoodJets","HT", "MET","Firstpt", "Secondpt", "Thirdpt","Fourthpt", "Fifthpt", "ptofAllJets" };
-  TString VarTitle[] = {"Number of Good Jets","H_{T}", "MET", "p_{T} of first jet", "p_{T} of second jet",  "p_{T} of third jet", "p_{T} of fourth jet",  "p_{T} of fith jet", "p_{T} of all jets"};
+  int Nbins[] = {14, 14, //numGoodJets
+		 50, 50, 50, 50, 50, 50,//HT
+		 25, 25, 25, 25, 25, 25,//MET
+		 8, 8, //NumVetoLeptons
+		 25, 25, //MT
+		 10, 10, 10, 10, 10, 10, //pt of veto and RA4 leptons
+		 50, 50, 25, 20, 20, 25};//pt of jets
+  double limits[][2] = {{.5,14.5},{0.5,14.5},//NumGoodJets
+			{0,1500},{0,1500},{0,1500},{0,1500},{0,1500},{0,1500},//HT
+			{0,500},{0,500},{0,500},{0,750},{0,750},{0,500},//MET
+			{-0.5,7.5},{-0.5,7.5},//NumVetoLeptons
+			{0,500},{0,500},//MT
+			{0,300},{0,300},{0,300},{0,300},{0,300},{0,300},//pt of veto and RA4 leptons
+			{0,1200},{0,750},{0,500},{0,400},{0,400},{0,750}};//pt of jets
+  TString Variable[] = {"NumGoodJets1l","NumGoodJets",
+			"HT_1l_3jets","HT_1l","HT","HT_1l_4jets","HT_1l_5jets","HT_3jets", 
+			"MET_1l_3jets","MET_1l","MET","MET_1l_4jets","MET_1l_5jets","MET_3jets",
+			"NumVetoLeptons", "NumRA4Leptons",
+			"MT_VetoLepton_1l_3jets","MT_RA4Lepton_1l_3jets",
+			"pTVetoLepton1_1l_3jets", "pTVetoLepton1_1l","pTVetoLepton1","pTVetoLepton2", "pTRA4Lepton1", "pTRA4Lepton2",
+			"pTfirstjet", "pTsecondjet",  "pTthirdjet", "pTfourthjet",  "pTfifthjet", "pTalljets"};
+  TString hName; 
+  TString VarTitle[] = {"Number of Good Jets single lepton","Number of Good Jets",
+			"H_{T} 1 lepton 3 jets","H_{T} 1 lepton","H_{T}","H_{T} 1 lepton 4 jets","H_{T} 1 lepton 5 jets","H_{T} 3 jets", "MET 1 lepton 3 jets", "MET 1 lepton","MET","MET 1 lepton 4 jets","MET 1 lepton 5 jets","MET 3 jets","Number of Veto Leptons", "Number of RA4 Leptons", "M_{T} of Veto Lepton","M_{T} of RA4 Lepton", "p_{T} of the highest p_{T} Veto Lepton: 1 lepton 3 jets", "p_{T} of the highest p_{T} Veto Lepton: 1 lepton",  "p_{T} of the highest p_{T} Veto Lepton",  "p_{T} of the second highest p_{T} Veto Lepton ","p_{T} of the highest p_{T} RA4 Lepton", "p_{T} of the second highest p_{T} RA4 Lepton", "p_{T} of first jet", "p_{T} of second jet",  "p_{T} of third jet", "p_{T} of fourth jet",  "p_{T} of fifth jet", "p_{T} of all jets"};
   TCanvas can("can","8 TeV Vs 13/14 TeV comparison");
-  TH1F* hVar[NVar];
+  float ptThresh[] = {30, 35, 40, 45, 50, 60, 70};
+  TH1F* hVar[NVar][Nthresh];
   cout<<"open eventhandler"<<endl;
-  double ptThresh=100;
-  for(int iVariable(0); iVariable< NVar; ++iVariable){
-    hVar[iVariable] = new TH1F(Variable[iVariable],VarTitle[iVariable],Nbins[iVariable], limits[iVariable][0], limits[iVariable][1]);
+  for(int iThresh=0;iThresh<Nthresh;iThresh++){
+    for(int iVariable(0); iVariable< NVar; ++iVariable){
+      hName= Variable[iVariable]; hName += "_"; hName += ptThresh[iThresh];  
+      hVar[iVariable][iThresh] = new TH1F(hName,VarTitle[iVariable],Nbins[iVariable], limits[iVariable][0], limits[iVariable][1]);
+    }
   }
   cout<<"Starting loop over entries"<<endl;
-
+  
   Timer timer(Nentries);
   timer.Start();
   for(int i(0); i<Nentries; ++i){
@@ -979,53 +1003,130 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
     }
     timer.Iterate();
     GetEntry(i);
-
-    for(int iVariable(0); iVariable< NVar; ++iVariable ){
-      double ValVariable(0); 
-      
-      switch(iVariable){
-      case 0: 
-	ValVariable= GetNumGoodJets(ptThresh);
-	break;      
-      case 1: 
-	ValVariable= GetHT(false,false);
-	break;      
-      case 2: 
-	if(pfmets_et->size()<=0) continue;
-	else ValVariable= pfmets_et->at(0);
-	break;
-      case 3: 
-	if(jets_AK5PF_pt->size()<=0 && isGoodJet(0, true, ptThresh, 2.4, true)) continue;
-	else ValVariable= jets_AK5PF_pt->at(0);	
-	break; 
-      case 4: 
-	if(jets_AK5PF_pt->size()<=1 && isGoodJet(1, true, ptThresh, 2.4, true)) continue;
-	else ValVariable= jets_AK5PF_pt->at(1);
-	break; 
-      case 5: 
-	if(jets_AK5PF_pt->size()<=2 && isGoodJet(2, true, ptThresh, 2.4, true)) continue;
-	else ValVariable= jets_AK5PF_pt->at(2);
-	break; 
-      case 6: 
-	if(jets_AK5PF_pt->size()<=3 && isGoodJet(3, true, ptThresh, 2.4, true)) continue;
-	else ValVariable= jets_AK5PF_pt->at(3);
-	break; 
-      case 7: 
-	if(jets_AK5PF_pt->size()<=4 && isGoodJet(4, true, ptThresh, 2.4, true)) continue;
-	else ValVariable= jets_AK5PF_pt->at(4);
-	break; 
-      case 8:  
-	for(unsigned int ijets(0); ijets<jets_AK5PF_pt->size(); ++ijets){
-	  if(isGoodJet(ijets, true, ptThresh, 2.4, true)){
-	    hVar[iVariable]->Fill(jets_AK5PF_pt->at(ijets));
+    if(! PassesPVCut()) continue;
+    bool isElectron; 
+    for(int iThresh=0;iThresh<Nthresh;iThresh++){
+      for(int iVariable(0); iVariable< NVar; ++iVariable ){
+	double ValVariable(0); 
+	
+	switch(iVariable){
+	case 0: 
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue; 
+	case 1:
+	  ValVariable= GetNumGoodJets(ptThresh[iThresh]);
+	  break;      
+	case 2:	 
+	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
+	case 3:	 
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue;
+	case 4: 
+	  ValVariable=GetHT(false,false);
+	  break;
+	case 5:
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=4))
+	    continue;
+	  ValVariable=GetHT(false,false);
+	  break;
+	case 6:
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=5))
+	    continue;
+	  ValVariable=GetHT(false,false);
+	  break;
+	case 7:
+	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
+	  ValVariable=GetHT(false,false);
+	  break;
+	case 8:	 
+	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
+	case 9:	 
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue;
+	case 10: 
+	  if(pfmets_et->size()<=0) continue;
+	  else ValVariable= pfmets_et->at(0);
+	  break;
+	case 11:
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=4))
+	    continue;
+	  if(pfmets_et->size()<=0) continue;
+	  else ValVariable= pfmets_et->at(0);
+	  break;
+ 	case 12:
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=5)) 
+	    continue;
+	  if(pfmets_et->size()<=0) continue;
+	  else ValVariable= pfmets_et->at(0);
+	  break;
+	case 13:
+	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
+	  if(pfmets_et->size()<=0) continue;
+	  else ValVariable= pfmets_et->at(0);
+	  break;	 
+	case 14:
+	  ValVariable=GetNumVetoLeptons();
+	  break;
+	case 15:
+	  ValVariable=GetNumRA4Leptons();
+	  break;
+	case 16:
+	  if (!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=3))
+	    continue;
+	  ValVariable=GetVetoLeptonMt();
+	  break;
+	case 17:
+ 	  if (!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=3))
+	    continue;
+	  ValVariable=GetRA4LeptonMt();
+	  break;
+	case 18:
+ 	  if (!(GetNumGoodJets(ptThresh[iThresh])>=3))
+	    continue;
+	case 19:
+ 	  if (!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1))
+	    continue;
+	case 20:
+	  ValVariable=GetVetoLeptonPt(1, isElectron);
+	  break;
+	case 21:
+	  ValVariable=GetVetoLeptonPt(2, isElectron);
+	  break;
+	case 22:
+	  ValVariable=GetRA4LeptonPt(1, isElectron);
+	  break;
+	case 23:
+	  ValVariable=GetRA4LeptonPt(2, isElectron);
+	  break;
+	case 24: 
+	  if(jets_AK5PF_pt->size()<=0 && isGoodJet(0, true, 0, 2.4, true)) continue;
+	  else ValVariable= jets_AK5PF_pt->at(0);	
+	  break; 
+	case 25: 
+	  if(jets_AK5PF_pt->size()<=1 && isGoodJet(1, true, 0, 2.4, true)) continue;
+	  else ValVariable= jets_AK5PF_pt->at(1);
+	  break; 
+	case 26: 
+	  if(jets_AK5PF_pt->size()<=2 && isGoodJet(2, true, 0, 2.4, true)) continue;
+	  else ValVariable= jets_AK5PF_pt->at(2);
+	  break; 
+	case 27: 
+	  if(jets_AK5PF_pt->size()<=3 && isGoodJet(3, true, 0, 2.4, true)) continue;
+	  else ValVariable= jets_AK5PF_pt->at(3);
+	  break; 
+	case 28: 
+	  if(jets_AK5PF_pt->size()<=4 && isGoodJet(4, true, 0, 2.4, true)) continue;
+	  else ValVariable= jets_AK5PF_pt->at(4);
+	  break; 
+	case 29:  
+	  for(unsigned int ijets(0); ijets<jets_AK5PF_pt->size(); ++ijets){
+	    if(isGoodJet(ijets, true, 0, 2.4, true)){
+	      hVar[iVariable][iThresh]->Fill(jets_AK5PF_pt->at(ijets));
+	    }
 	  }
-	}
-	continue;
-	break;	
-      } // Switch iVariable 
-      hVar[iVariable]->Fill(ValVariable);
-    }// Loop over all variables
-
+	  continue;
+	  break;	
+	} // Switch iVariable 
+	hVar[iVariable][iThresh]->Fill(ValVariable);
+      }// Loop over all variables
+    }//Loop over ptThresh ends
   }// Loop over all events
    
   
@@ -2227,6 +2328,15 @@ int EventHandler::GetNumGoodJets(double ptThresh) const{
   return numGoodJets;
 }
 
+    
+int EventHandler::GetNumVetoLeptons() const{
+  return   GetNumVetoElectrons() + GetNumVetoMuons();
+}
+    
+int EventHandler::GetNumRA4Leptons() const{
+  return   GetNumRA4Electrons() + GetNumRA4Muons();
+}
+
 int EventHandler::GetNumCSVTJets() const{
   int numPassing(0);
   for(unsigned int i(0); i<jets_AK5PF_pt->size(); ++i){
@@ -2326,7 +2436,7 @@ bool EventHandler::jetPassLooseID(const unsigned int ijet) const{
 bool EventHandler::isVetoElectron(const unsigned int k) const{
   //if(k>pf_else_pt->size()) return false;
   if (fabs(pf_els_scEta->at(k)) >= 2.5 ) return false;
-  if (pf_els_pt->at(k) < 10) return false;
+  if (pf_els_pt->at(k) < 15) return false;
   if(pf_els_isEB->at(k)){
     if ( fabs(pf_els_dEtaIn->at(k)) > 0.007)  return false;
     if ( fabs(pf_els_dPhiIn->at(k)) > 0.8)  return false;
@@ -2342,12 +2452,41 @@ bool EventHandler::isVetoElectron(const unsigned int k) const{
   }
   const double beamx(beamSpot_x->at(0)), beamy(beamSpot_y->at(0)); 
   const double d0(pf_els_d0dum->at(k)-beamx*sin(pf_els_tk_phi->at(k))+beamy*cos(pf_els_tk_phi->at(k)));
-  if ( fabs(d0) >= 0.04 ) return false;
+  if ( fabs(d0) >= 0.1 ) return false;
   if ( fabs(pf_els_vz->at(k) - pv_z->at(0) ) >= 0.2 ) return false;
 
   if(GetElectronRelIso(k)>=0.15) return false;
   return true;
 }
+
+
+//Added function that gets RA4 electrons
+bool EventHandler::isRA4Electron(const unsigned int k) const{
+  //if(k>pf_else_pt->size()) return false;
+  if (fabs(pf_els_scEta->at(k)) >= 2.4 ) return false;
+  if (pf_els_pt->at(k) < 20) return false;
+  if(pf_els_isEB->at(k)){
+    if ( fabs(pf_els_dEtaIn->at(k)) > 0.004)  return false;
+    if ( fabs(pf_els_dPhiIn->at(k)) > 0.03)  return false;
+    if (pf_els_sigmaIEtaIEta->at(k) > 0.01) return false;
+    if (pf_els_hadOverEm->at(k) > 0.12) return false;
+  }else if(pf_els_isEE->at(k)){
+    if ( fabs(pf_els_dEtaIn->at(k)) > 0.009)  return false;
+    if ( fabs(pf_els_dPhiIn->at(k)) > 0.10)  return false;
+    if (pf_els_sigmaIEtaIEta->at(k) > 0.03) return false;
+  }else{
+    fprintf(stderr, "Warning: Electron is not in barrel or endcap.\n");
+    return false;
+  }
+  const double beamx(beamSpot_x->at(0)), beamy(beamSpot_y->at(0)); 
+  const double d0(pf_els_d0dum->at(k)-beamx*sin(pf_els_tk_phi->at(k))+beamy*cos(pf_els_tk_phi->at(k)));
+  if ( fabs(d0) >= 0.02 ) return false;
+  if ( fabs(pf_els_vz->at(k) - pv_z->at(0) ) >= 0.1 ) return false;
+
+  if(GetElectronRelIso(k)>=0.07) return false;
+  return true;
+}
+
 
 double EventHandler::GetElectronRelIso(const unsigned int k) const{
   const double rho(rho_kt6PFJetsForIsolation2012);
@@ -2368,7 +2507,7 @@ double EventHandler::GetElectronRelIso(const unsigned int k) const{
 
 bool EventHandler::isVetoMuon(const unsigned int k) const{
   if (fabs(pf_mus_eta->at(k)) >= 2.4 ) return false;
-  if (pf_mus_pt->at(k) < 10) return false;
+  if (pf_mus_pt->at(k) < 15) return false;
   if ( !pf_mus_id_GlobalMuonPromptTight->at(k)) return false;
   // GlobalMuonPromptTight includes: isGlobal, globalTrack()->normalizedChi2() < 10, numberOfValidMuonHits() > 0
   if ( pf_mus_numberOfMatchedStations->at(k) <= 1 ) return false;
@@ -2376,7 +2515,7 @@ bool EventHandler::isVetoMuon(const unsigned int k) const{
   const double d0 = pf_mus_tk_d0dum->at(k)-beamx*sin(pf_mus_tk_phi->at(k))+beamy*cos(pf_mus_tk_phi->at(k));
   const double pf_mus_vz = pf_mus_tk_vz->at(k);
   const double pf_mus_dz_vtx = fabs(pf_mus_vz-pv_z->at(0));
-  if (fabs(d0)>=0.2 || pf_mus_dz_vtx>=0.5) return false;
+  if (fabs(d0)>=0.1 || pf_mus_dz_vtx>=0.5) return false;
   if ( !pf_mus_tk_numvalPixelhits->at(k)) return false;
   if ( pf_mus_tk_LayersWithMeasurement->at(k) <= 5 ) return false;
   
@@ -2387,11 +2526,68 @@ bool EventHandler::isVetoMuon(const unsigned int k) const{
   return true;
 }
 
+
+bool EventHandler::isRA4Muon(const unsigned int k) const{
+  if (fabs(pf_mus_eta->at(k)) >= 2.1 ) return false;
+  if (pf_mus_pt->at(k) < 10) return false;
+  if ( !pf_mus_id_GlobalMuonPromptTight->at(k)) return false;
+  // GlobalMuonPromptTight includes: isGlobal, globalTrack()->normalizedChi2() < 10, numberOfValidMuonHits() > 0
+  if ( pf_mus_numberOfMatchedStations->at(k) <= 1 ) return false;
+  const double beamx (beamSpot_x->at(0)), beamy(beamSpot_y->at(0));   
+  const double d0 = pf_mus_tk_d0dum->at(k)-beamx*sin(pf_mus_tk_phi->at(k))+beamy*cos(pf_mus_tk_phi->at(k));
+  const double pf_mus_vz = pf_mus_tk_vz->at(k);
+  const double pf_mus_dz_vtx = fabs(pf_mus_vz-pv_z->at(0));
+  if (fabs(d0)>=0.02 || pf_mus_dz_vtx>=1.0) return false;
+  if ( pf_mus_tk_numvalPixelhits->at(k)>0) return true;
+  if ( pf_mus_tk_LayersWithMeasurement->at(k) <= 8 ) return false;
+  
+  double isoNeutral(pf_mus_pfIsolationR04_sumNeutralHadronEt->at(k) + pf_mus_pfIsolationR04_sumPhotonEt->at(k) - 0.5*pf_mus_pfIsolationR04_sumPUPt->at(k));
+  if(isoNeutral<0.0) isoNeutral=0.0;
+  const double pf_mus_rel_iso((pf_mus_pfIsolationR04_sumChargedHadronPt->at(k) + isoNeutral) / pf_mus_pt->at(k));
+  if (pf_mus_rel_iso > 0.10) return false; //PF based?
+  return true;
+}
+
+
 bool EventHandler::isVetoTau(const unsigned int k) const{
   if (taus_pt->at(k)<20) return false; // Updated 6/24
   if (fabs(taus_eta->at(k)) > 2.4) return false;
   if (taus_byLooseIsolationDeltaBetaCorr->at(k) <= 0) return false;
   return true;
+}
+
+int EventHandler::GetNumRA4Electrons() const{
+  int count(0);
+  for(unsigned int i(0); i<pf_els_pt->size(); ++i){
+    if(isRA4Electron(i)) ++count;
+  }
+  return count;
+}
+  
+int EventHandler::GetNumRA4Muons() const{
+  int count(0);
+  for(unsigned int i(0); i<pf_mus_pt->size(); ++i){
+    if(isRA4Muon(i)) ++count;
+  }
+  return count;
+}
+
+
+int EventHandler::GetRA4Electron(int nth_highest_pt) const{
+  int count(0);
+  for(unsigned int i(0); i<pf_els_pt->size(); ++i){
+    if(isRA4Electron(i)) ++count;
+    if(count==nth_highest_pt) return i;
+  }
+  return -1;
+}
+int EventHandler::GetRA4Muon(int nth_highest_pt) const{
+  int count(0);
+  for(unsigned int i(0); i<pf_mus_pt->size(); ++i){
+    if(isRA4Muon(i)) ++count;
+    if(count==nth_highest_pt) return i;
+  }
+  return -1;
 }
 
 int EventHandler::GetNumVetoElectrons() const{
@@ -2401,7 +2597,7 @@ int EventHandler::GetNumVetoElectrons() const{
   }
   return count;
 }
-
+ 
 int EventHandler::GetNumVetoMuons() const{
   int count(0);
   for(unsigned int i(0); i<pf_mus_pt->size(); ++i){
@@ -2417,6 +2613,129 @@ int EventHandler::GetNumVetoTaus() const{
   }
   return count;
 }
+int EventHandler::GetVetoElectron(int nth_highest_pt) const{
+  int count(0);
+  for(unsigned int i(0); i<pf_els_pt->size(); ++i){
+    if(isVetoElectron(i)) ++count;
+    if(count==nth_highest_pt) return i;
+  }
+  return -1;
+}
+
+int EventHandler::GetVetoMuon(int nth_highest_pt) const{
+  int count(0);
+  for(unsigned int i(0); i<pf_mus_pt->size(); ++i){
+    if(isVetoMuon(i)) ++count;
+    if(count==nth_highest_pt) return i;
+  }
+  return -1;
+}
+
+
+float EventHandler::GetVetoLeptonPt(int nth_highest_pt, bool & isElectron) const{
+  int iel=GetVetoElectron(nth_highest_pt);
+  int imu=GetVetoMuon(nth_highest_pt);
+  isElectron=true;
+  if (iel<0){
+    if(imu<0) return -999;
+    else {
+      isElectron=false; 
+      return pf_mus_pt->at(imu);
+    }
+  } else {
+    if(imu<0) return pf_els_pt->at(iel);
+    else {
+      if( pf_els_pt->at(iel)> pf_mus_pt->at(imu)) return pf_els_pt->at(iel);   
+      else {
+	isElectron=false;  
+	return pf_mus_pt->at(imu);
+      }    
+    }
+  }
+}
+
+float EventHandler::GetVetoLeptonPhi(int nth_highest_pt) const{
+  int iel=GetVetoElectron(nth_highest_pt);
+  int imu=GetVetoMuon(nth_highest_pt);
+  if (iel<0){
+    if(imu<0) return -999;
+    else {
+      return pf_mus_phi->at(imu);
+    }
+  } else {
+    if(imu<0) return pf_els_phi->at(iel);
+    else {
+      
+      if( pf_els_pt->at(iel)> pf_mus_pt->at(imu)) return pf_els_phi->at(iel);   
+      else  return pf_mus_phi->at(imu);
+    }
+  }
+} 
+
+float EventHandler::GetRA4LeptonPt(int nth_highest_pt, bool & isElectron) const{
+  int iel=GetRA4Electron(nth_highest_pt);
+  int imu=GetRA4Muon(nth_highest_pt);
+  isElectron=true;
+  if (iel<0){
+    if(imu<0) return -999;
+    else {
+      isElectron=false; 
+      return pf_mus_pt->at(imu);
+    }
+  } else {
+    if(imu<0) return pf_els_pt->at(iel);
+    else {
+      if( pf_els_pt->at(iel)> pf_mus_pt->at(imu)) return pf_els_pt->at(iel);   
+      else {
+	isElectron=false;  
+	return pf_mus_pt->at(imu);
+      }    
+    }
+  }
+}
+float EventHandler::GetRA4LeptonPhi(int nth_highest_pt) const{
+  int iel=GetRA4Electron(nth_highest_pt);
+  int imu=GetRA4Muon(nth_highest_pt);
+  if (iel<0){
+    if(imu<0) return -999;
+    else {
+      return pf_mus_phi->at(imu);
+    }
+  } else {
+    if(imu<0) return pf_els_phi->at(iel);
+    else {
+      
+      if( pf_els_pt->at(iel)> pf_mus_pt->at(imu)) return pf_els_phi->at(iel);   
+      else  return pf_mus_phi->at(imu);
+    }
+  }
+} 
+
+
+float EventHandler::GetRA4LeptonDeltaPhi(int nth_highest_pt) const{
+  return pfmets_phi->at(0)-GetRA4LeptonPhi(nth_highest_pt);
+}
+
+float EventHandler::GetVetoLeptonDeltaPhi(int nth_highest_pt) const{
+  return pfmets_phi->at(0)-GetVetoLeptonPhi(nth_highest_pt);
+}
+
+
+float EventHandler::GetRA4LeptonMt(int nth_highest_pt) const{
+  bool isElectron;
+  float pt=GetRA4LeptonPt(nth_highest_pt, isElectron);
+  float dphi=GetRA4LeptonDeltaPhi(nth_highest_pt);
+  return  sqrt(2*pt*(pfmets_et->at(0))*(1-cos(dphi)));
+}
+
+float EventHandler::GetVetoLeptonMt(int nth_highest_pt) const{
+  bool isElectron;
+  float pt=GetVetoLeptonPt(nth_highest_pt, isElectron);
+  float dphi=GetVetoLeptonDeltaPhi(nth_highest_pt);
+  return  sqrt(2*pt* (pfmets_et->at(0))*(1-cos(dphi)));
+
+}
+
 
 bool EventHandler::isIsoTrack(const unsigned int itracks, const double ptThresh) const{
   if(!isQualityTrack(itracks)) return false;
