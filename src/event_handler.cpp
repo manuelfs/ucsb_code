@@ -960,19 +960,19 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
   //Variables
   TFile file(outFileName.c_str(), "recreate");
   int Nbins[] = {14, 14, //numGoodJets
-		 50, 50, 50, 50, 50, 50,//HT
-		 25, 25, 25, 25, 25, 25,//MET
+		 36, 36, 36, 36, 36, 36,//HT
+		 20, 20, 20, 20, 20, 20,//MET
 		 8, 8, //NumVetoLeptons
-		 25, 25, //MT
+		 24, 24, //MT
 		 10, 10, 10, 10, 10, 10, //pt of veto and RA4 leptons
-		 50, 50, 25, 20, 20, 25};//pt of jets
+		 34, 23, 15, 10, 10, 23};//pt of jets
   double limits[][2] = {{.5,14.5},{0.5,14.5},//NumGoodJets
-			{0,1500},{0,1500},{0,1500},{0,1500},{0,1500},{0,1500},//HT
-			{0,500},{0,500},{0,500},{0,750},{0,750},{0,500},//MET
+			{0,1800},{0,1800},{0,1800},{0,1800},{0,1800},{0,1800},//HT
+			{0,1000},{0,1000},{0,1000},{0,1000},{0,1000},{0,1000},//MET
 			{-0.5,7.5},{-0.5,7.5},//NumVetoLeptons
-			{0,500},{0,500},//MT
-			{0,300},{0,300},{0,300},{0,300},{0,300},{0,300},//pt of veto and RA4 leptons
-			{0,1200},{0,750},{0,500},{0,400},{0,400},{0,750}};//pt of jets
+			{0,600},{0,600},//MT
+			{0,400},{0,400},{0,400},{0,400},{0,400},{0,400},//pt of veto and RA4 leptons
+			{0,1320},{0,920},{0,600},{0,400},{0,400},{0,920}};//pt of jets
   TString Variable[] = {"NumGoodJets1l","NumGoodJets",
 			"HT_1l_3jets","HT_1l","HT","HT_1l_4jets","HT_1l_5jets","HT_3jets", 
 			"MET_1l_3jets","MET_1l","MET","MET_1l_4jets","MET_1l_5jets","MET_3jets",

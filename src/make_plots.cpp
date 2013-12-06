@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
   }
   std::string outFilename("");
   if(iscfA){
-    outFilename="raw_plots_and_values/"+inFilename+".root";
+    outFilename="raw_plots_and_values/"+inFilename+"_"+masspoint+".root";
     inFilename="/net/cms2/cms2r0/cfA/"+inFilename+"/cfA_*" +masspoint +"*.root";
   }else{
     std::string baseName(inFilename);
