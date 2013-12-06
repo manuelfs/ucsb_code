@@ -973,7 +973,7 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
 			{0,600},{0,600},//MT
 			{0,400},{0,400},{0,400},{0,400},{0,400},{0,400},//pt of veto and RA4 leptons
 			{0,1320},{0,920},{0,600},{0,400},{0,400},{0,920}};//pt of jets
-  TString Variable[] = {"NumGoodJets1l","NumGoodJets",
+  TString Variable[] = {"NumGoodJets_1l","NumGoodJets",
 			"HT_1l_3jets","HT_1l","HT","HT_1l_4jets","HT_1l_5jets","HT_3jets", 
 			"MET_1l_3jets","MET_1l","MET","MET_1l_4jets","MET_1l_5jets","MET_3jets",
 			"NumVetoLeptons", "NumRA4Leptons",
@@ -1008,7 +1008,7 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
     for(int iThresh=0;iThresh<Nthresh;iThresh++){
       for(int iVariable(0); iVariable< NVar; ++iVariable ){
 	double ValVariable(0); 
-	
+	//	cout<<"event "<<i<<", threshold "<<iThresh<<", Variable "<<iVariable<<", "<<jets_AK5PF_pt->size()<<endl; 
 	switch(iVariable){
 	case 0: 
 	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue; 
@@ -1096,23 +1096,23 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
 	  ValVariable=GetRA4LeptonPt(2, isElectron);
 	  break;
 	case 24: 
-	  if(jets_AK5PF_pt->size()<=0 && isGoodJet(0, true, 0, 2.4, true)) continue;
+	  if(jets_AK5PF_pt->size()<=0 || !( isGoodJet(0, true, 0, 2.4, true))) continue;
 	  else ValVariable= jets_AK5PF_pt->at(0);	
 	  break; 
 	case 25: 
-	  if(jets_AK5PF_pt->size()<=1 && isGoodJet(1, true, 0, 2.4, true)) continue;
+	  if(jets_AK5PF_pt->size()<=1 || !(isGoodJet(1, true, 0, 2.4, true))) continue;
 	  else ValVariable= jets_AK5PF_pt->at(1);
 	  break; 
 	case 26: 
-	  if(jets_AK5PF_pt->size()<=2 && isGoodJet(2, true, 0, 2.4, true)) continue;
+	  if(jets_AK5PF_pt->size()<=2 ||!( isGoodJet(2, true, 0, 2.4, true))) continue;
 	  else ValVariable= jets_AK5PF_pt->at(2);
 	  break; 
 	case 27: 
-	  if(jets_AK5PF_pt->size()<=3 && isGoodJet(3, true, 0, 2.4, true)) continue;
+	  if(jets_AK5PF_pt->size()<=3 ||!(isGoodJet(3, true, 0, 2.4, true))) continue;
 	  else ValVariable= jets_AK5PF_pt->at(3);
 	  break; 
 	case 28: 
-	  if(jets_AK5PF_pt->size()<=4 && isGoodJet(4, true, 0, 2.4, true)) continue;
+	  if(jets_AK5PF_pt->size()<=4 ||!( isGoodJet(4, true, 0, 2.4, true))) continue;
 	  else ValVariable= jets_AK5PF_pt->at(4);
 	  break; 
 	case 29:  
@@ -2404,6 +2404,7 @@ bool EventHandler::isProblemJet(const unsigned int ijet) const{
 }
 
 bool EventHandler::isGoodJet(const unsigned int ijet, const bool jetid, const double ptThresh, const double etaThresh, const bool doBeta) const{
+  if(jets_AK5PF_pt->size()<=ijet) return false;
   if(jets_AK5PF_pt->at(ijet)<ptThresh || fabs(jets_AK5PF_eta->at(ijet))>etaThresh) return false;
   if( jetid && !jetPassLooseID(ijet) ) return false;
   if(GetcfAVersion()<69||sampleName.find("SMS-TChiHH")!=std::string::npos) return true;
