@@ -974,15 +974,26 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
 			{0,400},{0,400},{0,400},{0,400},{0,400},{0,400},//pt of veto and RA4 leptons
 			{0,1320},{0,920},{0,600},{0,400},{0,400},{0,920}};//pt of jets
   TString Variable[] = {"NumGoodJets_1l","NumGoodJets",
-			"HT_1l_3jets","HT_1l","HT","HT_1l_4jets","HT_1l_5jets","HT_3jets", 
-			"MET_1l_3jets","MET_1l","MET","MET_1l_4jets","MET_1l_5jets","MET_3jets",
-			"NumVetoLeptons", "NumRA4Leptons",
-			"MT_VetoLepton_1l_3jets","MT_RA4Lepton_1l_3jets",
-			"pTVetoLepton1_1l_3jets", "pTVetoLepton1_1l","pTVetoLepton1","pTVetoLepton2", "pTRA4Lepton1", "pTRA4Lepton2",
-			"pTfirstjet", "pTsecondjet",  "pTthirdjet", "pTfourthjet",  "pTfifthjet", "pTalljets"};
+			"HT_1l_3jets","HT_1l","HT","HT_1l_4jets","HT_1l_5jets","HT_3jets_", 
+			"MET_1l_3jets","MET_1l","MET","MET_1l_4jets","MET_1l_5jets","MET_3jets_",
+			"NumLeptonsVeto", "NumLeptonsRA4",
+			"MT_VetoLepton_1l_3jets","MT_RA4Lepton_1l_3jets", 
+			"pTVeto1Lepton_1l_3jets", "pTVeto1Lepton_1l","pTVeto1Lepton","pTVeto2Lepton", "pTRA41Lepton", "pTRA42Lepton",
+			"pT_firstjet", "pT_secondjet",  "pT_thirdjet", "pT_fourthjet",  "pT_fifthjet", "pT_all"};
   TString hName; 
   TString VarTitle[] = {"Number of Good Jets single lepton","Number of Good Jets",
-			"H_{T} 1 lepton 3 jets","H_{T} 1 lepton","H_{T}","H_{T} 1 lepton 4 jets","H_{T} 1 lepton 5 jets","H_{T} 3 jets", "MET 1 lepton 3 jets", "MET 1 lepton","MET","MET 1 lepton 4 jets","MET 1 lepton 5 jets","MET 3 jets","Number of Veto Leptons", "Number of RA4 Leptons", "M_{T} of Veto Lepton","M_{T} of RA4 Lepton", "p_{T} of the highest p_{T} Veto Lepton: 1 lepton 3 jets", "p_{T} of the highest p_{T} Veto Lepton: 1 lepton",  "p_{T} of the highest p_{T} Veto Lepton",  "p_{T} of the second highest p_{T} Veto Lepton ","p_{T} of the highest p_{T} RA4 Lepton", "p_{T} of the second highest p_{T} RA4 Lepton", "p_{T} of first jet", "p_{T} of second jet",  "p_{T} of third jet", "p_{T} of fourth jet",  "p_{T} of fifth jet", "p_{T} of all jets"};
+			"H_{T} single lepton, 3 jets","H_{T} single lepton,","H_{T}",
+			"H_{T} single lepton, 4 jets","H_{T} single lepton, 5 jets","H_{T} 3 jets", 
+			"MET single lepton, 3 jets", "MET single lepton,","MET","MET single lepton, 4 jets",
+			"MET single lepton, 5 jets","MET 3 jets","Number of Veto Leptons", 
+			"Number of RA4 Leptons", "M_{T} of Veto Lepton","M_{T} of RA4 Lepton", 
+			"p_{T} of the highest p_{T} Veto Lepton: single lepton, 3 jets", 
+			"p_{T} of the highest p_{T} Veto Lepton: single lepton",  
+			"p_{T} of the highest p_{T} Veto Lepton",  
+			"p_{T} of the second highest p_{T} Veto Lepton", 
+			"p_{T} of the highest p_{T} RA4 Lepton", "p_{T} of the second highest p_{T} RA4 Lepton", 
+			"p_{T} of first jet", "p_{T} of second jet",  "p_{T} of third jet", 
+			"p_{T} of fourth jet",  "p_{T} of fifth jet", "p_{T} of all jets"};
   TCanvas can("can","8 TeV Vs 13/14 TeV comparison");
   float ptThresh[] = {30, 35, 40, 45, 50, 60, 70};
   TH1F* hVar[NVar][Nthresh];
@@ -997,8 +1008,8 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
   
   Timer timer(Nentries);
   timer.Start();
-  for(int i(0); i<Nentries; ++i){
-    if(i%1000==0 && i!=0){
+  for(int i(227131); i<Nentries; ++i){
+    if(i%1==0 && i!=0){
       timer.PrintRemainingTime();
     }
     timer.Iterate();
@@ -1008,7 +1019,9 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
     for(int iThresh=0;iThresh<Nthresh;iThresh++){
       for(int iVariable(0); iVariable< NVar; ++iVariable ){
 	double ValVariable(0); 
-	//	cout<<"event "<<i<<", threshold "<<iThresh<<", Variable "<<iVariable<<", "<<jets_AK5PF_pt->size()<<endl; 
+		cout<<"event "<<i<<", threshold "<<iThresh<<", Variable "<<iVariable
+		    <<", # of jets "<<jets_AK5PF_pt->size()
+		    <<", # of beta "<<beta.size()<<endl; 
 	switch(iVariable){
 	case 0: 
 	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue; 
@@ -2408,8 +2421,8 @@ bool EventHandler::isGoodJet(const unsigned int ijet, const bool jetid, const do
   if(jets_AK5PF_pt->at(ijet)<ptThresh || fabs(jets_AK5PF_eta->at(ijet))>etaThresh) return false;
   if( jetid && !jetPassLooseID(ijet) ) return false;
   if(GetcfAVersion()<69||sampleName.find("SMS-TChiHH")!=std::string::npos) return true;
-  if(!betaUpToDate) GetBeta();
-  if(beta.at(ijet)<0.2 && doBeta) return false;
+  //if(!betaUpToDate) GetBeta();
+  //if(beta.at(ijet)<0.2 && doBeta) return false;
   return true;
 }
 
