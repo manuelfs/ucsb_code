@@ -24,7 +24,7 @@
 #include <string>
 #include <sstream>
 
-#define NFiles 6
+#define NFiles 7
 
 using namespace std;
 using std::cout;
@@ -36,26 +36,30 @@ TString RoundNumber(double n, int e, double d=1);
 void combine_histo(){
  
   //Files
-  TString FileNames[] = { "raw_plots_and_values/TTJets_FullLeptMGDecays_8TeV-madgraph-tauola_Summer12_DR53X-PU_S10_START53_V7C-v2_AODSIM_UCSB1883_v71.root",
-			  "raw_plots_and_values/TTJets_HadronicMGDecays_8TeV-madgraph_Summer12_DR53X-PU_S10_START53_V7A_ext-v1_AODSIM_UCSB1880_v71.root",
-			  "raw_plots_and_values/TTJets_SemiLeptMGDecays_8TeV-madgraph-tauola_Summer12_DR53X-PU_S10_START53_V7C-v1_AODSIM_UCSB1884_v71.root",
-			  "raw_plots_and_values/TTbar_TuneZ2star_13TeV-pythia6-tauola_Summer13dr53X-PU45bx25_START53_V19D-v2_AODSIM_UCSB1933_v71.root",
+  TString FileNames[] = { "raw_plots_and_values/TTJets_FullLeptMGDecays_8TeV-madgraph-tauola_Summer12_DR53X-PU_S10_START53_V7C-v2_AODSIM_UCSB1883_v71_.root",
+			  "raw_plots_and_values/TTJets_HadronicMGDecays_8TeV-madgraph_Summer12_DR53X-PU_S10_START53_V7A_ext-v1_AODSIM_UCSB1880_v71_.root",
+			  "raw_plots_and_values/TTJets_SemiLeptMGDecays_8TeV-madgraph-tauola_Summer12_DR53X-PU_S10_START53_V7C-v1_AODSIM_UCSB1884_v71_.root",
+			  "raw_plots_and_values/TTbar_TuneZ2star_13TeV-pythia6-tauola_Summer13dr53X-PU45bx25_START53_V19D-v2_AODSIM_UCSB1933_v71_.root",
 			  "raw_plots_and_values/SMS-MadGraph_Pythia6Zstar_8TeV_T1tttt_2J_mGo-1100to1400_mLSP-525to1000_25GeVX25GeV_Binning_Summer12-START52_V9_FSIM-v2_AODSIM_UCSB1739reshuf_v68_1150_800_.root",
-			  "raw_plots_and_values/SMS-T1tttt_2J_mGo-845to3000_mLSP-1to1355_TuneZ2star_14TeV-madgraph-tauola_Summer12-START53_V7C_FSIM_PU_S12-v1_AODSIM_UCSB1949reshuf_v71_1145_800.root"};
+			  "raw_plots_and_values/SMS-T1tttt_2J_mGo-845to3000_mLSP-1to1355_TuneZ2star_14TeV-madgraph-tauola_Summer12-START53_V7C_FSIM_PU_S12-v1_AODSIM_UCSB1949reshuf_v71_1145_800.root", 
+"raw_plots_and_values/SMS-T1tttt_2J_mGo-845to3000_mLSP-1to1355_TuneZ2star_14TeV-madgraph-tauola_Summer12-START53_V7C_FSIM_PU_S12-v1_AODSIM_UCSB1949reshuf_v71_1145_500.root"};
   
-  TString tagNames[] = {"ttbar_ll_8TeV", "ttbar_hh_8TeV", "ttbar_lh_8TeV", "ttbar_13TeV","T1tttt_8TeV","T1tttt_14TeV"}, Pname;
-  TString legNames[] = {"ttbar_ll_8TeV", "ttbar_hh_8TeV", "t#bar{t} @ 8 TeV ", "t#bar{t} @ 13 TeV ","T1tttt(1150,800) @ 8 TeV ","T1tttt(1145,800) @ 14 TeV "};
+  TString tagNames[] = {"ttbar_ll_8TeV", "ttbar_hh_8TeV", "ttbar_lh_8TeV", "ttbar_13TeV",
+			"T1tttt_8TeV", "T1tttt_14TeV_1145_800", "T1tttt_14TeV_1145_500"}, Pname;
+  TString legNames[] = {"ttbar_ll_8TeV", "ttbar_hh_8TeV", "t#bar{t} @ 8 TeV ", "t#bar{t} @ 13 TeV ","T1tttt(1150,800) @ 8 TeV ","T1tttt(1145,800) @ 14 TeV ", "T1tttt(1145,500) @ 14 TeV "};
   //TString xTitles[] = {"Number of good jets", "H_{T} (GeV)", "E_{T,miss} (GeV)", "LOpt", "NLOpt", "NNLOpt" };
   // TString yTitles[] = {"Entries", "Entries/(100 GeV)", "Entries/(50 GeV)", "Entries", "Entries", "Entries"};
   //TString texNames[] = {"$\\left<N_j \\right>$", "$\\left<H_T \\right>$", "$\\left<E_{T, {\\rm miss}} \\right>$"}; 
   TFile *file[NFiles];
-  for(int iFiles(0); iFiles < NFiles; iFiles++)
+  for(int iFiles(0); iFiles < NFiles; iFiles++){
+    //    cout<<"Opening "<<FileNames[iFiles]<<endl;
     file[iFiles] = new TFile(FileNames[iFiles]);
+  }
   
-  int colors[] = {kSpring-9, kSpring-9, kSpring-9, kGreen+2, kRed-9, kRed+1};
-  int styles[] = {3345, 3345, 3345, 0, 3354, 0};
+  int colors[] = {kSpring-9, kSpring-9, kSpring-9, kGreen+2, kRed-9, kRed+1, kBlue+1};
+  int styles[] = {3345, 3345, 3345, 0, 3354, 0, 0};
 
-  ofstream texFile; texFile.open("txtrgbt/Averages.tex");
+  ofstream texFile; texFile.open("txt/Averages.tex");
 
   gStyle->SetHatchesLineWidth(2);
   gStyle->SetOptStat(0);
@@ -67,20 +71,22 @@ void combine_histo(){
   TString Title = "";
   for(int obj(0); obj < file[0]->GetListOfKeys()->GetSize(); ++obj){
     const std::string obj_name(file[0]->GetListOfKeys()->At(obj)->GetName());
+    cout<< "Doing variable "<<obj_name<<endl;
     VarName = obj_name;
-    if(VarName.Contains("NumGoodJets")) {xTitle = "Number of Good Jets "; texName = "$\\left<N_j \\right>$";}
-    if(VarName.Contains("HT")) xTitle = "H_{T} ";
-    if(VarName.Contains("MET")) xTitle = "E_{T,miss} ";
-    if(VarName.Contains("NumLeptonVeto")) xTitle = "Number of Veto Leptons";
-    if(VarName.Contains("NumLeptonRA4")) xTitle = "Number of RA4 Leptons";
-    if(VarName.Contains("MT")) xTitle = "M_{T} ";
-    if(VarName.Contains("pTRA41")) xTitle = "p_{T} of First RA4 Lepton ";
-    if(VarName.Contains("pTVeto1")) xTitle = "p_{T} of First Veto Lepton ";
-    if(VarName.Contains("pTRA42")) xTitle = "p_{T} of Second RA4 Lepton ";
-    if(VarName.Contains("pTVeto2")) xTitle = "p_{T} of Second Veto Lepton ";
-    if(VarName.Contains("pT_")) Title = "p_{T} ";
-    if(VarName.Contains("HT")||VarName.Contains("MET")||VarName.Contains("MT")||VarName.Contains("pTVeto")||VarName.
-       Contains("pTRA4")||VarName.Contains("pT_")) xTitle+="(GeV)";				   
+    xTitle = "";
+    texName = "";
+    if(VarName.Contains("NumGoodJets")) {xTitle = "Number of Good Jets "; texName = "$\\bf{\\left<N_j \\right>} $";};
+    if(VarName.Contains("HT")) {xTitle = "H_{T} "; texName = "$\\bf{\\left<H_T \\right>} \\mathbf{(GeV)}$";};
+    if(VarName.Contains("MET")) {xTitle = "E_{T,miss} ";  texName = "$\\bf{\\left<E_{T,miss} \\right>} \\mathbf{(GeV)}$";};
+    if(VarName.Contains("NumLeptonsVeto")) {xTitle = "Number of Veto Leptons "; texName = "$\\bf{\\left<N_veto \\right>} $";};
+    if(VarName.Contains("NumLeptonsRA4")) {xTitle = "Number of RA4 Leptons"; texName ="$\\bf{\\left<N_RA4 \\right>} $"; };
+    if(VarName.Contains("MT"))  {xTitle = "M_{T} "; texName = "$\\bf{\\left<M_T \\right>} \\mathbf{(GeV)}$";};
+    if(VarName.Contains("pTRA41"))  {xTitle = "p_T of First RA4 Lepton "; texName = "$\\bf{\\left<p_T \\right>} \\mathbf{(GeV)}$";};
+    if(VarName.Contains("pTVeto1")) { xTitle = "p_{T} of First Veto Lepton "; texName = "$\\bf{\\left<p_T \\right>} \\mathbf{(GeV)}$";};
+    if(VarName.Contains("pTRA42")) {xTitle = "p_{T} of Second RA4 Lepton "; texName = "$\\bf{\\left<p_T \\right>} \\mathbf{(GeV)}$";};
+    if(VarName.Contains("pTVeto2")){ xTitle = "p_{T} of Second Veto Lepton "; texName = "$\\bf{\\left<p_T \\right>} \\mathbf{(GeV)}$";};
+    if(VarName.Contains("pT_")) {xTitle = "p_{T} "; texName = "$\\bf{\\left<p_T \\right>} \\mathbf{(GeV)}$";};
+    if(!VarName.Contains("Num")) xTitle+="(GeV)";				   
     //if(VarName.Contains("_1l"))  Title+= "Single Lepton ";
     // if(VarName.Contains("3jets_"))  Title+= " 3 Jets ";
     // if(VarName.Contains("l_3jets"))  Title+= " and 3 Jets ";
@@ -92,7 +98,9 @@ void combine_histo(){
     leg.SetTextSize(0.04); leg.SetFillColor(0); leg.SetBorderSize(0);
     leg.SetTextFont(132);
     for(int iFiles(0); iFiles < NFiles; iFiles++){
+      //cout<< "Getting keys from file "<< iFiles<<", pointer "<<file[iFiles]<<endl;
       hFile[iFiles] = *(static_cast<TH1F*>(file[iFiles]->GetKey(obj_name.c_str(),1)->ReadObj()));
+      // cout<< hFile[iFiles].GetTitle()<<endl;
       hFile[iFiles].SetLineColor(colors[iFiles]);
       hFile[iFiles].SetLineWidth(2);
       hFile[iFiles].SetFillStyle(styles[iFiles]);
@@ -102,10 +110,10 @@ void combine_histo(){
 	hFile[iFiles].Add(&hFile[1],1 );
       }
       Title=hFile[iFiles].GetTitle();
-      if(VarName.Contains("jets")){ 
+      if(VarName.Contains("ets")){ 
 	Title+=", p_{T}^{thresh} = ";
 	TString VarName2 = VarName;
-	VarName2.Remove(0, VarName2.Sizeof()-2);
+	VarName2.Remove(0, VarName2.Sizeof()-3);
 	Title+=VarName2;
 	Title+= " GeV";
       }    
@@ -114,17 +122,18 @@ void combine_histo(){
 	yTitle+="/ (";
 	yTitle+= RoundNumber(hFile[iFiles].GetBinWidth(1), 0);
 	yTitle+=" GeV)";
-	  }
+      }
       hFile[iFiles].SetTitle(Title);
       hFile[iFiles].SetXTitle(xTitle);
       hFile[iFiles].SetYTitle(yTitle);
       hFile[iFiles].Scale(1000./hFile[iFiles].Integral());    
-      cout<<"The Mean of "<< tagNames[iFiles]<<" is "<<hFile[iFiles].GetMean()<<endl;
+      //cout<<"The Mean of "<< tagNames[iFiles]<<" is "<<hFile[iFiles].GetMean()<<endl;
       if(hFile[iFiles].GetMaximum() > maxhisto && iFiles>=2) maxhisto = hFile[iFiles].GetMaximum();
       if(iFiles>=2) leg.AddEntry(&hFile[iFiles], legNames[iFiles]);
       means[iFiles] = hFile[iFiles].GetMean();
     } //Loop over all files
-  
+    cout<<"Writing table"<<endl;   
+    texFile << obj_name << endl;
     texFile << "\\begin{tabular}{c | ccc}\n \\hline\\hline\n"<<texName<<" & 8 TeV & 13/14 TeV & $\\Delta$ (\\%) \\\\"<<endl;
     texFile << "\\hline\n $t\\bar{t}$ & "<< RoundNumber(means[2],1) << " & " << RoundNumber(means[3],1) << " & "<<
       RoundNumber((means[3]-means[2])*100, 1, means[2]) << "\\\\" << endl;
