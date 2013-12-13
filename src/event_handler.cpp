@@ -964,15 +964,15 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
 		 20, 20, 20, 20, 20, 20,//MET
 		 8, 8, //NumVetoLeptons
 		 24, 24, //MT
-		 10, 10, 10, 10, 10, 10, //pt of veto and RA4 leptons
-		 34, 23, 15, 10, 10, 23};//pt of jets
+		 20, 20, 20, 20, 20, 20, //pt of veto and RA4 leptons
+		 34, 23, 30, 40, 40, 40};//pt of jets
   double limits[][2] = {{.5,14.5},{0.5,14.5},//NumGoodJets
 			{0,1800},{0,1800},{0,1800},{0,1800},{0,1800},{0,1800},//HT
 			{0,1000},{0,1000},{0,1000},{0,1000},{0,1000},{0,1000},//MET
 			{-0.5,7.5},{-0.5,7.5},//NumVetoLeptons
 			{0,600},{0,600},//MT
 			{0,400},{0,400},{0,400},{0,400},{0,400},{0,400},//pt of veto and RA4 leptons
-			{0,1320},{0,920},{0,600},{0,400},{0,400},{0,920}};//pt of jets
+			{0,1320},{0,920},{0,600},{0,400},{0,400},{0,200}};//pt of jets
   TString Variable[] = {"NumGoodJets_1l","NumGoodJets",
 			"HT_1l_3jets","HT_1l","HT","HT_1l_4jets","HT_1l_5jets","HT_3jets_", 
 			"MET_1l_3jets","MET_1l","MET","MET_1l_4jets","MET_1l_5jets","MET_3jets_",
@@ -1000,6 +1000,7 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
   cout<<"open eventhandler"<<endl;
   for(int iThresh=0;iThresh<Nthresh;iThresh++){
     for(int iVariable(0); iVariable< NVar; ++iVariable){
+      if(iThresh>0 && iVariable >= 21) continue;
       hName= Variable[iVariable]; hName += "_"; hName += ptThresh[iThresh];  
       hVar[iVariable][iThresh] = new TH1F(hName,VarTitle[iVariable],Nbins[iVariable], limits[iVariable][0], limits[iVariable][1]);
     }
@@ -1008,8 +1009,8 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
   
   Timer timer(Nentries);
   timer.Start();
-  for(int i(227131); i<Nentries; ++i){
-    if(i%1==0 && i!=0){
+  for(int i(0); i<Nentries; ++i){
+    if(i%1000==0 && i!=0){
       timer.PrintRemainingTime();
     }
     timer.Iterate();
@@ -1019,9 +1020,10 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
     for(int iThresh=0;iThresh<Nthresh;iThresh++){
       for(int iVariable(0); iVariable< NVar; ++iVariable ){
 	double ValVariable(0); 
-		cout<<"event "<<i<<", threshold "<<iThresh<<", Variable "<<iVariable
-		    <<", # of jets "<<jets_AK5PF_pt->size()
-		    <<", # of beta "<<beta.size()<<endl; 
+	//cout<<"event "<<i<<", threshold "<<iThresh<<", Variable "<<iVariable
+	//<<", # of jets "<<jets_AK5PF_pt->size()
+	//<<", # of beta "<<beta.size()<<endl; 
+	if(iThresh>0 && iVariable >= 21) continue;
 	switch(iVariable){
 	case 0: 
 	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue; 

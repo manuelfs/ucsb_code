@@ -47,9 +47,6 @@ void combine_histo(){
   TString tagNames[] = {"ttbar_ll_8TeV", "ttbar_hh_8TeV", "ttbar_lh_8TeV", "ttbar_13TeV",
 			"T1tttt_8TeV", "T1tttt_14TeV_1145_800", "T1tttt_14TeV_1145_500"}, Pname;
   TString legNames[] = {"ttbar_ll_8TeV", "ttbar_hh_8TeV", "t#bar{t} @ 8 TeV ", "t#bar{t} @ 13 TeV ","T1tttt(1150,800) @ 8 TeV ","T1tttt(1145,800) @ 14 TeV ", "T1tttt(1145,500) @ 14 TeV "};
-  //TString xTitles[] = {"Number of good jets", "H_{T} (GeV)", "E_{T,miss} (GeV)", "LOpt", "NLOpt", "NNLOpt" };
-  // TString yTitles[] = {"Entries", "Entries/(100 GeV)", "Entries/(50 GeV)", "Entries", "Entries", "Entries"};
-  //TString texNames[] = {"$\\left<N_j \\right>$", "$\\left<H_T \\right>$", "$\\left<E_{T, {\\rm miss}} \\right>$"}; 
   TFile *file[NFiles];
   for(int iFiles(0); iFiles < NFiles; iFiles++){
     //    cout<<"Opening "<<FileNames[iFiles]<<endl;
@@ -61,8 +58,15 @@ void combine_histo(){
 
   ofstream texFile; texFile.open("txt/Averages.tex");
 
+  gStyle->SetCanvasDefW(1000);
+  gStyle->SetCanvasDefH(600);
+
   gStyle->SetHatchesLineWidth(2);
   gStyle->SetOptStat(0);
+  gStyle->SetPadRightMargin(0.038);
+  gStyle->SetPadTopMargin(0.035);
+  gStyle->SetPadBottomMargin(0.12);
+  gStyle->SetPadLeftMargin(0.1);
   TH1F hFile[NFiles];
   TCanvas can;
   //Loop over all variables  
@@ -94,8 +98,8 @@ void combine_histo(){
     // if(VarName.Contains("l_5jets"))  Title+= " and 5 jets ";
 
     double maxhisto(0), means[NFiles];  
-    TLegend leg(0.5,0.7,0.89,0.89);
-    leg.SetTextSize(0.04); leg.SetFillColor(0); leg.SetBorderSize(0);
+    TLegend leg(0.45,0.65,0.96,0.90);
+    leg.SetTextSize(0.06); leg.SetFillColor(0); leg.SetBorderSize(0);
     leg.SetTextFont(132);
     for(int iFiles(0); iFiles < NFiles; iFiles++){
       //cout<< "Getting keys from file "<< iFiles<<", pointer "<<file[iFiles]<<endl;
@@ -126,13 +130,16 @@ void combine_histo(){
       hFile[iFiles].SetTitle(Title);
       hFile[iFiles].SetXTitle(xTitle);
       hFile[iFiles].SetYTitle(yTitle);
+      //hFile[iFiles].SetTextSize(0.06);            // Set global text size
+      hFile[iFiles].SetTitleSize(0.05,"xy");     // Set the 2 axes title size
+      hFile[iFiles].SetLabelSize(0.05,"xy");     // Set the 2 axes label size
       hFile[iFiles].Scale(1000./hFile[iFiles].Integral());    
       //cout<<"The Mean of "<< tagNames[iFiles]<<" is "<<hFile[iFiles].GetMean()<<endl;
       if(hFile[iFiles].GetMaximum() > maxhisto && iFiles>=2) maxhisto = hFile[iFiles].GetMaximum();
       if(iFiles>=2) leg.AddEntry(&hFile[iFiles], legNames[iFiles]);
       means[iFiles] = hFile[iFiles].GetMean();
     } //Loop over all files
-    cout<<"Writing table"<<endl;   
+    //cout<<"Writing table"<<endl;   
     texFile << obj_name << endl;
     texFile << "\\begin{tabular}{c | ccc}\n \\hline\\hline\n"<<texName<<" & 8 TeV & 13/14 TeV & $\\Delta$ (\\%) \\\\"<<endl;
     texFile << "\\hline\n $t\\bar{t}$ & "<< RoundNumber(means[2],1) << " & " << RoundNumber(means[3],1) << " & "<<
@@ -142,7 +149,7 @@ void combine_histo(){
     texFile << "\\end{tabular}"<<endl<<endl;
     for(int iFiles(0); iFiles < NFiles; iFiles++){
       if(iFiles==2){
-	hFile[iFiles].SetMaximum(1.15*maxhisto); 
+	hFile[iFiles].SetMaximum(1.2*maxhisto); 
 	hFile[iFiles].Draw("h");
       }else hFile[iFiles].Draw("same h");
     } //Loop over all files
@@ -151,8 +158,9 @@ void combine_histo(){
     Pname = "plots/"; Pname += obj_name; Pname += ".pdf";
     can.SetLogy(0);    
     can.SaveAs(Pname);
-    hFile[2].SetMaximum(10*maxhisto);    
+    hFile[2].SetMaximum(20*maxhisto);    
     can.SetLogy(1);
+    hFile[2].SetMinimum(0.05);
     Pname.ReplaceAll(".pdf", "_log.pdf");
     can.SaveAs(Pname);
   } //Loop over all variables
