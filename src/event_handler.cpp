@@ -2449,7 +2449,7 @@ bool EventHandler::jetPassLooseID(const unsigned int ijet) const{
   return false;
 }
 
-bool EventHandler::isVetoElectron(const unsigned int k) const{
+bool EventHandler::isVetoElectron(const unsigned int k, const double pf_els_rel_iso_cut) const{
   //if(k>pf_else_pt->size()) return false;
   if (fabs(pf_els_scEta->at(k)) >= 2.5 ) return false;
   if (pf_els_pt->at(k) < 15) return false;
@@ -2471,13 +2471,13 @@ bool EventHandler::isVetoElectron(const unsigned int k) const{
   if ( fabs(d0) >= 0.1 ) return false;
   if ( fabs(pf_els_vz->at(k) - pv_z->at(0) ) >= 0.2 ) return false;
 
-  if(GetElectronRelIso(k)>=0.15) return false;
+  if(GetElectronRelIso(k)>= pf_els_rel_iso_cut ) return false;
   return true;
 }
 
 
 //Added function that gets RA4 electrons
-bool EventHandler::isRA4Electron(const unsigned int k) const{
+bool EventHandler::isRA4Electron(const unsigned int k, const double pf_els_rel_iso_cut) const{
   //if(k>pf_else_pt->size()) return false;
   if (fabs(pf_els_scEta->at(k)) >= 2.4 ) return false;
   if (pf_els_pt->at(k) < 20) return false;
@@ -2499,7 +2499,7 @@ bool EventHandler::isRA4Electron(const unsigned int k) const{
   if ( fabs(d0) >= 0.02 ) return false;
   if ( fabs(pf_els_vz->at(k) - pv_z->at(0) ) >= 0.1 ) return false;
 
-  if(GetElectronRelIso(k)>=0.07) return false;
+  if(GetElectronRelIso(k)>=pf_els_rel_iso_cut) return false;
   return true;
 }
 
@@ -2521,7 +2521,16 @@ double EventHandler::GetElectronRelIso(const unsigned int k) const{
   return ( pf_els_PFchargedHadronIsoR03->at(k) + ( eleIso > 0 ? eleIso : 0.0 ) )/pf_els_pt->at(k);
 }
 
-bool EventHandler::isVetoMuon(const unsigned int k) const{
+double EventHandler::GetMuonRelIso(const unsigned int k) const{
+  
+  double isoNeutral(pf_mus_pfIsolationR04_sumNeutralHadronEt->at(k) + pf_mus_pfIsolationR04_sumPhotonEt->at(k) - 0.5*pf_mus_pfIsolationR04_sumPUPt->at(k));
+  if(isoNeutral<0.0) isoNeutral=0.0;
+  const double pf_mus_rel_iso((pf_mus_pfIsolationR04_sumChargedHadronPt->at(k) + isoNeutral) / pf_mus_pt->at(k));
+  return pf_mus_rel_iso;
+
+}
+
+bool EventHandler::isVetoMuon(const unsigned int k, const double pf_mus_rel_iso_cut) const{
   if (fabs(pf_mus_eta->at(k)) >= 2.4 ) return false;
   if (pf_mus_pt->at(k) < 15) return false;
   if ( !pf_mus_id_GlobalMuonPromptTight->at(k)) return false;
@@ -2534,16 +2543,12 @@ bool EventHandler::isVetoMuon(const unsigned int k) const{
   if (fabs(d0)>=0.1 || pf_mus_dz_vtx>=0.5) return false;
   if ( !pf_mus_tk_numvalPixelhits->at(k)) return false;
   if ( pf_mus_tk_LayersWithMeasurement->at(k) <= 5 ) return false;
-  
-  double isoNeutral(pf_mus_pfIsolationR04_sumNeutralHadronEt->at(k) + pf_mus_pfIsolationR04_sumPhotonEt->at(k) - 0.5*pf_mus_pfIsolationR04_sumPUPt->at(k));
-  if(isoNeutral<0.0) isoNeutral=0.0;
-  const double pf_mus_rel_iso((pf_mus_pfIsolationR04_sumChargedHadronPt->at(k) + isoNeutral) / pf_mus_pt->at(k));
-  if (pf_mus_rel_iso > 0.2) return false;
+  if ( GetMuonRelIso(k) > pf_mus_rel_iso_cut ) return false;
   return true;
 }
 
 
-bool EventHandler::isRA4Muon(const unsigned int k) const{
+bool EventHandler::isRA4Muon(const unsigned int k,  const double pf_mus_rel_iso_cut) const{
   if (fabs(pf_mus_eta->at(k)) >= 2.1 ) return false;
   if (pf_mus_pt->at(k) < 10) return false;
   if ( !pf_mus_id_GlobalMuonPromptTight->at(k)) return false;
@@ -2556,11 +2561,7 @@ bool EventHandler::isRA4Muon(const unsigned int k) const{
   if (fabs(d0)>=0.02 || pf_mus_dz_vtx>=1.0) return false;
   if ( pf_mus_tk_numvalPixelhits->at(k)>0) return true;
   if ( pf_mus_tk_LayersWithMeasurement->at(k) <= 8 ) return false;
-  
-  double isoNeutral(pf_mus_pfIsolationR04_sumNeutralHadronEt->at(k) + pf_mus_pfIsolationR04_sumPhotonEt->at(k) - 0.5*pf_mus_pfIsolationR04_sumPUPt->at(k));
-  if(isoNeutral<0.0) isoNeutral=0.0;
-  const double pf_mus_rel_iso((pf_mus_pfIsolationR04_sumChargedHadronPt->at(k) + isoNeutral) / pf_mus_pt->at(k));
-  if (pf_mus_rel_iso > 0.10) return false; //PF based?
+  if ( GetMuonRelIso(k) > pf_mus_rel_iso_cut ) return false;
   return true;
 }
 

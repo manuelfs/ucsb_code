@@ -140,12 +140,12 @@ private:
   bool isProblemJet(const unsigned int) const;
   bool jetPassLooseID(const unsigned int) const;
 
-  bool isVetoElectron(const unsigned int) const;
-  bool isVetoMuon(const unsigned int) const;
+  bool isVetoElectron(const unsigned int, const double pf_els_rel_iso_cut= 0.15) const;
+  bool isVetoMuon(const unsigned int,  const double pf_mus_rel_iso_cut= 0.20) const;
   bool isVetoTau(const unsigned int) const;
 
-  bool isRA4Electron(const unsigned int) const;
-  bool isRA4Muon(const unsigned int) const;
+  bool isRA4Electron(const unsigned int, const double pf_els_rel_iso_cut= 0.07) const;
+  bool isRA4Muon(const unsigned int, const double pf_mus_rel_iso_cut= 0.10) const;
 
   int GetNumVetoLeptons() const;
   int GetNumVetoElectrons() const;
@@ -175,6 +175,7 @@ private:
   int NewGetNumIsoTracks(const double=10.0) const;
 
   double GetElectronRelIso(const unsigned int) const;
+  double GetMuonRelIso(const unsigned int) const;
 
   double GetSbinWeight() const;
   double GetTopPtWeight() const;
