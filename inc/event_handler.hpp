@@ -60,6 +60,42 @@ private:
   double scaleFactor;
   mutable std::vector<double> beta;
 
+  ///////////////////////////////////////////////////////////////////////////
+
+  int GetTrueElectron(int iel, double &deltaR);
+  int GetTrueMuon(int imu, double &deltaR);
+
+  bool isVetoElectron(const unsigned int, const double pf_els_rel_iso_cut= 0.15) const;
+  bool isVetoMuon(const unsigned int,  const double pf_mus_rel_iso_cut= 0.20) const;
+  bool isVetoTau(const unsigned int) const;
+
+  bool isRA4Electron(const unsigned int, const double pf_els_rel_iso_cut= 0.07) const;
+  bool isRA4Muon(const unsigned int, const double pf_mus_rel_iso_cut= 0.10) const;
+
+  int GetNumVetoLeptons() const;
+  int GetNumVetoElectrons() const;
+  int GetNumVetoMuons() const;
+  int GetNumVetoTaus() const;
+  int GetVetoElectron(int nth_highest_pt=1) const;
+  int GetVetoMuon(int nth_highest_pt=1) const;
+  float GetVetoLeptonPt(int nth_highest_pt, bool & isElectron) const;
+  float GetVetoLeptonPhi(int nth_highest_pt=1) const;
+  float GetVetoLeptonDeltaPhi(int nth_highest_pt=1) const;
+  float GetVetoLeptonMt(int nth_highest_pt=1) const;
+
+  int GetNumRA4Leptons() const;
+  int GetNumRA4Electrons(const double pf_mus_rel_iso_cut= 0.20) const;
+  int GetNumRA4Muons(const double pf_mus_rel_iso_cut= 0.10) const;
+  int GetRA4Electron(int nth_highest_pt=1) const;
+  int GetRA4Muon(int nth_highest_pt=1) const;
+  float GetRA4LeptonPt(int nth_highest_pt, bool & isElectron) const;
+  float GetRA4LeptonPhi(int nth_highest_pt=1) const;
+  float GetRA4LeptonDeltaPhi(int nth_highest_pt=1) const;
+  float GetRA4LeptonMt(int nth_highest_pt=1) const;
+
+  ///////////////////////////////////////////////////////////////////////////
+
+
   int GetcfAVersion() const;
 
   void GetEntry(const unsigned int);
@@ -139,34 +175,6 @@ private:
   bool isGoodJet(const unsigned int, const bool=true, const double=40.0, const double=2.4, const bool=true) const;
   bool isProblemJet(const unsigned int) const;
   bool jetPassLooseID(const unsigned int) const;
-
-  bool isVetoElectron(const unsigned int, const double pf_els_rel_iso_cut= 0.15) const;
-  bool isVetoMuon(const unsigned int,  const double pf_mus_rel_iso_cut= 0.20) const;
-  bool isVetoTau(const unsigned int) const;
-
-  bool isRA4Electron(const unsigned int, const double pf_els_rel_iso_cut= 0.07) const;
-  bool isRA4Muon(const unsigned int, const double pf_mus_rel_iso_cut= 0.10) const;
-
-  int GetNumVetoLeptons() const;
-  int GetNumVetoElectrons() const;
-  int GetNumVetoMuons() const;
-  int GetNumVetoTaus() const;
-  int GetVetoElectron(int nth_highest_pt=1) const;
-  int GetVetoMuon(int nth_highest_pt=1) const;
-  float GetVetoLeptonPt(int nth_highest_pt, bool & isElectron) const;
-  float GetVetoLeptonPhi(int nth_highest_pt=1) const;
-  float GetVetoLeptonDeltaPhi(int nth_highest_pt=1) const;
-  float GetVetoLeptonMt(int nth_highest_pt=1) const;
-
-  int GetNumRA4Leptons() const;
-  int GetNumRA4Electrons() const;
-  int GetNumRA4Muons() const;
-  int GetRA4Electron(int nth_highest_pt=1) const;
-  int GetRA4Muon(int nth_highest_pt=1) const;
-  float GetRA4LeptonPt(int nth_highest_pt, bool & isElectron) const;
-  float GetRA4LeptonPhi(int nth_highest_pt=1) const;
-  float GetRA4LeptonDeltaPhi(int nth_highest_pt=1) const;
-  float GetRA4LeptonMt(int nth_highest_pt=1) const;
 
   bool isIsoTrack(const unsigned int, const double=10.0) const;
   bool isQualityTrack(const unsigned int) const;

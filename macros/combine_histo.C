@@ -133,7 +133,7 @@ void combine_histo(){
       //hFile[iFiles].SetTextSize(0.06);            // Set global text size
       hFile[iFiles].SetTitleSize(0.05,"xy");     // Set the 2 axes title size
       hFile[iFiles].SetLabelSize(0.05,"xy");     // Set the 2 axes label size
-      hFile[iFiles].Scale(1000./hFile[iFiles].Integral());    
+      if(iFiles>=2) hFile[iFiles].Scale(1000./hFile[iFiles].Integral());    
       //cout<<"The Mean of "<< tagNames[iFiles]<<" is "<<hFile[iFiles].GetMean()<<endl;
       if(hFile[iFiles].GetMaximum() > maxhisto && iFiles>=2) maxhisto = hFile[iFiles].GetMaximum();
       if(iFiles>=2) leg.AddEntry(&hFile[iFiles], legNames[iFiles]);

@@ -32,9 +32,10 @@
 #include "timer.hpp"
 #include "math.hpp"
 #include "in_json_2012.hpp"
+#include "pdtlund.hpp"
 
 #define Nthresh 7
-#define NVar 30
+#define NVar 35
 
 
 const double EventHandler::CSVTCut(0.898);
@@ -43,6 +44,323 @@ const double EventHandler::CSVLCut(0.244);
 const std::vector<std::vector<int> > VRunLumiPrompt(MakeVRunLumi("Golden"));
 const std::vector<std::vector<int> > VRunLumi24Aug(MakeVRunLumi("24Aug"));
 const std::vector<std::vector<int> > VRunLumi13Jul(MakeVRunLumi("13Jul"));
+
+void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries){
+
+  //Variables
+  TFile file(outFileName.c_str(), "recreate");
+  TString hName; 
+  int Nbins[] = {14, 14, //numGoodJets
+		 36, 36, 36, 36, 36, 36,//HT
+		 20, 20, 20, 20, 20, 20,//MET
+		 8, 8, //NumVetoLeptons
+		 24, 24, //MT
+		 20, 20, 20, 20, 20, 20, //pt of veto and RA4 leptons
+		 34, 23, 30, 40, 40, 40, //pt of jets
+                 60, 20, 20, 25, 25}; //PU, Isolation
+  double limits[][2] = {{.5,14.5},{0.5,14.5},//NumGoodJets
+			{0,1800},{0,1800},{0,1800},{0,1800},{0,1800},{0,1800},//HT
+			{0,1000},{0,1000},{0,1000},{0,1000},{0,1000},{0,1000},//MET
+			{-0.5,7.5},{-0.5,7.5},//NumVetoLeptons
+			{0,600},{0,600},//MT
+			{0,400},{0,400},{0,400},{0,400},{0,400},{0,400},//pt of veto and RA4 leptons
+			{0,1320},{0,920},{0,600},{0,400},{0,400},{0,200}, // pt of jets
+			{0,60}, {0,0.1}, {0,0.1}, {0,0.5}, {0,0.5}}; // PU, Isolation
+  TString Variable[] = {"NumGoodJets_1l","NumGoodJets",
+			"HT_1l_3jets","HT_1l","HT","HT_1l_4jets","HT_1l_5jets","HT_3jets_", 
+			"MET_1l_3jets","MET_1l","MET","MET_1l_4jets","MET_1l_5jets","MET_3jets_",
+			"NumLeptonsVeto", "NumLeptonsRA4",
+			"MT_VetoLepton_1l_3jets","MT_RA4Lepton_1l_3jets", 
+			"pTVeto1Lepton_1l_3jets", "pTVeto1Lepton_1l","pTVeto1Lepton","pTVeto2Lepton", "pTRA41Lepton", "pTRA42Lepton",
+			"pT_firstjet", "pT_secondjet",  "pT_thirdjet", "pT_fourthjet",  "pT_fifthjet", "pT_all",
+			"PU_True_NumInteractions", "Iso_el_real", "Iso_el_fake", "Iso_mu_real", "Iso_mu_fake"};
+  TString VarTitle[] = {"Number of Good Jets single lepton","Number of Good Jets",
+			"H_{T} single lepton, 3 jets","H_{T} single lepton,","H_{T}",
+			"H_{T} single lepton, 4 jets","H_{T} single lepton, 5 jets","H_{T} 3 jets", 
+			"MET single lepton, 3 jets", "MET single lepton,","MET","MET single lepton, 4 jets",
+			"MET single lepton, 5 jets","MET 3 jets","Number of Veto Leptons", 
+			"Number of RA4 Leptons", "M_{T} of Veto Lepton","M_{T} of RA4 Lepton", 
+			"p_{T} of the highest p_{T} Veto Lepton: single lepton, 3 jets", 
+			"p_{T} of the highest p_{T} Veto Lepton: single lepton",  
+			"p_{T} of the highest p_{T} Veto Lepton",  
+			"p_{T} of the second highest p_{T} Veto Lepton", 
+			"p_{T} of the highest p_{T} RA4 Lepton", "p_{T} of the second highest p_{T} RA4 Lepton", 
+			"p_{T} of first jet", "p_{T} of second jet",  "p_{T} of third jet", 
+			"p_{T} of fourth jet",  "p_{T} of fifth jet", "p_{T} of all jets",
+			"True number of PV", "Relative isolation for N_{e}^{real} = 1", 
+			"Relative isolation for N_{e}^{fake} = 1", "Relative isolation for N_{#mu}^{real} = 1", 
+			"Relative isolation for N_{#mu}^{fake} = 1"};
+
+  TCanvas can("can","8 TeV Vs 13/14 TeV comparison");
+  float ptThresh[] = {30, 40, 45, 50, 60, 70, 80};
+  TH1F* hVar[NVar][Nthresh];
+  cout<<"open eventhandler"<<endl;
+  for(int iThresh=0;iThresh<Nthresh;iThresh++){
+    for(int iVariable(0); iVariable< NVar; ++iVariable){
+      if(iThresh>0 && iVariable >= 21) continue;
+      hName= Variable[iVariable]; hName += "_"; hName += ptThresh[iThresh];  
+      hVar[iVariable][iThresh] = new TH1F(hName,VarTitle[iVariable],Nbins[iVariable], limits[iVariable][0], limits[iVariable][1]);
+    }
+  }
+  cout<<"Starting loop over entries"<<endl;
+  
+  Timer timer(Nentries);
+  timer.Start();
+  for(int i(0); i<Nentries; ++i){
+    if(i%1000==0 && i!=0){
+      timer.PrintRemainingTime();
+    }
+    timer.Iterate();
+    GetEntry(i);
+    if(! PassesPVCut()) continue;
+
+    /////////////// DEBUG ///////////////
+    // if(GetNumRA4Electrons()==1){
+    //   cout<<endl;
+    //   timer.PrintRemainingTime();
+    //   for(unsigned int imc = 0; imc < mc_doc_id->size(); imc++){
+    // 	cout<<"ID "<<(int)mc_doc_id->at(imc)<<",   \tMom ID "<<(int)mc_doc_mother_id->at(imc)
+    // 	    <<", \tGMom ID "<<(int)mc_doc_grandmother_id->at(imc)
+    // 	    <<", \tGGMom ID "<<(int)mc_doc_ggrandmother_id->at(imc)
+    // 	    <<", \tN daughters "<<mc_doc_numOfDaughters->at(imc)
+    // 	    <<",   \tN moms "<<mc_doc_numOfMothers->at(imc)<<endl;
+    //   }
+    //   cout<<endl;
+
+    //   int iel = GetRA4Electron(1);
+    //   double dR(0);
+    //   if(iel < 0) continue;
+    //   cout<<"iel "<<iel<<", eta "<<pf_els_eta->at(iel)<<", phi "<<pf_els_phi->at(iel)<<endl;
+    //   int imc = GetTrueElectron(iel, dR);
+    //   if(imc < 0) continue;
+    //   cout<<"imc "<<imc<<", eta "<<mc_doc_eta->at(imc)<<", phi "<<mc_doc_phi->at(imc)
+    // 	  <<", dR "<<dR<<endl;
+    //   continue;
+    // }
+    ////////////////////////////////////
+
+    bool isElectron; 
+    int ilepton, imcdoc, momID;
+    double deltaR;
+    for(int iThresh=0;iThresh<Nthresh;iThresh++){
+      for(int iVariable(0); iVariable< NVar; ++iVariable ){
+	double ValVariable(0); 
+	//cout<<"event "<<i<<", threshold "<<iThresh<<", Variable "<<iVariable
+	//<<", # of jets "<<jets_AK5PF_pt->size()
+	//<<", # of beta "<<beta.size()<<endl; 
+	if(iThresh>0 && iVariable >= 21) continue;
+	switch(iVariable){
+	case 0: 
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue; 
+	case 1:
+	  ValVariable= GetNumGoodJets(ptThresh[iThresh]);
+	  break;      
+	case 2:	 
+	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
+	case 3:	 
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue;
+	case 4: 
+	  ValVariable=GetHT(false,false);
+	  break;
+	case 5:
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=4))
+	    continue;
+	  ValVariable=GetHT(false,false);
+	  break;
+	case 6:
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=5))
+	    continue;
+	  ValVariable=GetHT(false,false);
+	  break;
+	case 7:
+	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
+	  ValVariable=GetHT(false,false);
+	  break;
+	case 8:	 
+	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
+	case 9:	 
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue;
+	case 10: 
+	  if(pfmets_et->size()<=0) continue;
+	  else ValVariable= pfmets_et->at(0);
+	  break;
+	case 11:
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=4))
+	    continue;
+	  if(pfmets_et->size()<=0) continue;
+	  else ValVariable= pfmets_et->at(0);
+	  break;
+ 	case 12:
+	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=5)) 
+	    continue;
+	  if(pfmets_et->size()<=0) continue;
+	  else ValVariable= pfmets_et->at(0);
+	  break;
+	case 13:
+	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
+	  if(pfmets_et->size()<=0) continue;
+	  else ValVariable= pfmets_et->at(0);
+	  break;	 
+	case 14:
+	  ValVariable=GetNumVetoLeptons();
+	  break;
+	case 15:
+	  ValVariable=GetNumRA4Leptons();
+	  break;
+	case 16:
+	  if (!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=3))
+	    continue;
+	  ValVariable=GetVetoLeptonMt();
+	  break;
+	case 17:
+ 	  if (!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=3))
+	    continue;
+	  ValVariable=GetRA4LeptonMt();
+	  break;
+	case 18:
+ 	  if (!(GetNumGoodJets(ptThresh[iThresh])>=3))
+	    continue;
+	case 19:
+ 	  if (!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1))
+	    continue;
+	case 20:
+	  ValVariable=GetVetoLeptonPt(1, isElectron);
+	  break;
+	case 21:
+	  ValVariable=GetVetoLeptonPt(2, isElectron);
+	  break;
+	case 22:
+	  ValVariable=GetRA4LeptonPt(1, isElectron);
+	  break;
+	case 23:
+	  ValVariable=GetRA4LeptonPt(2, isElectron);
+	  break;
+	case 24: 
+	  if(jets_AK5PF_pt->size()<=0 || !( isGoodJet(0, true, 0, 2.4, true))) continue;
+	  else ValVariable= jets_AK5PF_pt->at(0);	
+	  break; 
+	case 25: 
+	  if(jets_AK5PF_pt->size()<=1 || !(isGoodJet(1, true, 0, 2.4, true))) continue;
+	  else ValVariable= jets_AK5PF_pt->at(1);
+	  break; 
+	case 26: 
+	  if(jets_AK5PF_pt->size()<=2 ||!( isGoodJet(2, true, 0, 2.4, true))) continue;
+	  else ValVariable= jets_AK5PF_pt->at(2);
+	  break; 
+	case 27: 
+	  if(jets_AK5PF_pt->size()<=3 ||!(isGoodJet(3, true, 0, 2.4, true))) continue;
+	  else ValVariable= jets_AK5PF_pt->at(3);
+	  break; 
+	case 28: 
+	  if(jets_AK5PF_pt->size()<=4 ||!( isGoodJet(4, true, 0, 2.4, true))) continue;
+	  else ValVariable= jets_AK5PF_pt->at(4);
+	  break; 
+	case 29:  
+	  for(unsigned int ijets(0); ijets<jets_AK5PF_pt->size(); ++ijets){
+	    if(isGoodJet(ijets, true, 0, 2.4, true)){
+	      hVar[iVariable][iThresh]->Fill(jets_AK5PF_pt->at(ijets));
+	    }
+	  }
+	  continue;
+	  break;	
+	case 30: 
+	  ValVariable= PU_TrueNumInteractions->at(0);
+	  break; 
+	case 31:
+	  if(!(GetNumRA4Electrons(999)==1)) continue;
+	  ilepton = GetRA4Electron(1);
+	  if(ilepton<0) continue;
+	  deltaR=999.;
+	  imcdoc = GetTrueElectron(ilepton, deltaR);
+	  if(imcdoc<0) momID = -1;
+	  else momID = abs((int)mc_doc_mother_id->at(imcdoc));
+	  if(imcdoc<0 || deltaR>0.2 || momID!=PdtLund::W_plus) continue;
+	  ValVariable = GetElectronRelIso(ilepton);
+	  break; 
+	case 32:
+	  if(!(GetNumRA4Electrons(999)==1)) continue;
+	  ilepton = GetRA4Electron(1);
+	  if(ilepton<0) continue;
+	  deltaR=999.;
+	  imcdoc = GetTrueElectron(ilepton, deltaR);
+	  if(imcdoc<0) momID = -1;
+	  else momID = abs((int)mc_doc_mother_id->at(imcdoc));
+	  if(!(imcdoc<0 || deltaR>0.2 || momID!=PdtLund::W_plus)) continue;
+	  ValVariable = GetElectronRelIso(ilepton);
+	  break; 
+	case 33:
+	  if(!(GetNumRA4Muons(999)==1)) continue;
+	  ilepton = GetRA4Muon(1);
+	  if(ilepton<0) continue;
+	  deltaR=999.;
+	  imcdoc = GetTrueMuon(ilepton, deltaR);
+	  if(imcdoc<0) momID = -1;
+	  else momID = abs((int)mc_doc_mother_id->at(imcdoc));
+	  if(imcdoc<0 || deltaR>0.2 || momID!=PdtLund::W_plus) continue;
+	  ValVariable = GetMuonRelIso(ilepton);
+	  break; 
+	case 34:
+	  if(!(GetNumRA4Muons(999)==1)) continue;
+	  ilepton = GetRA4Muon(1);
+	  if(ilepton<0) continue;
+	  deltaR=999.;
+	  imcdoc = GetTrueMuon(ilepton, deltaR);
+	  if(imcdoc<0) momID = -1;
+	  else momID = abs((int)mc_doc_mother_id->at(imcdoc));
+	  if(!(imcdoc<0 || deltaR>0.2 || momID!=PdtLund::W_plus)) continue;
+	  ValVariable = GetMuonRelIso(ilepton);
+	  break; 
+	} // Switch iVariable 
+
+	hVar[iVariable][iThresh]->Fill(ValVariable);
+      }// Loop over all variables
+    }//Loop over ptThresh ends
+  }// Loop over all events   
+  
+  //cout<<"Finished looping over events"<<endl;
+  file.Write();
+  file.Close();
+  cout<<"Finished saving file "<<outFileName<<endl;
+    
+}
+
+int EventHandler::GetTrueElectron(int iel, double &closest_dR){
+  if(iel < 0 || iel >= (int)pf_els_eta->size()) return -1;
+
+  int closest_imc = -1; 
+  double dR = 9999.; closest_dR = 9999.;
+  double RecEta = pf_els_eta->at(iel), RecPhi = pf_els_phi->at(iel);
+  double MCEta, MCPhi;
+  for(unsigned int imc=0; imc < mc_doc_id->size(); imc++){
+    if(abs(mc_doc_id->at(imc)) != PdtLund::e_minus) continue;
+    MCEta = mc_doc_eta->at(imc); MCPhi = mc_doc_phi->at(imc);
+    dR = sqrt(pow(RecEta-MCEta,2) + pow(RecPhi-MCPhi,2));
+    if(dR < closest_dR) {
+      closest_dR = dR;
+      closest_imc = imc;
+    }
+  }
+  return closest_imc;
+}
+
+int EventHandler::GetTrueMuon(int imu, double &closest_dR){
+  if(imu < 0 || imu >= (int)pf_mus_eta->size()) return -1;
+
+  int closest_imc = -1; 
+  double dR = 9999.; closest_dR = 9999.;
+  double RecEta = pf_mus_eta->at(imu), RecPhi = pf_mus_phi->at(imu);
+  double MCEta, MCPhi;
+  for(unsigned int imc=0; imc < mc_doc_id->size(); imc++){
+    if(abs(mc_doc_id->at(imc)) != PdtLund::mu_minus) continue;
+    MCEta = mc_doc_eta->at(imc); MCPhi = mc_doc_phi->at(imc);
+    dR = sqrt(pow(RecEta-MCEta,2) + pow(RecPhi-MCPhi,2));
+    if(dR < closest_dR) {
+      closest_dR = dR;
+      closest_imc = imc;
+    }
+  }
+  return closest_imc;
+}
 
 EventHandler::EventHandler(const std::string &fileName, const bool isList, const double scaleFactorIn, const bool fastMode):
   cfA(fileName, isList),
@@ -954,202 +1272,6 @@ int GetType(const std::pair<int,int> &bo){
   }else{
     return 19;
   }
-}
-
-void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries){
-  //Variables
-  TFile file(outFileName.c_str(), "recreate");
-  int Nbins[] = {14, 14, //numGoodJets
-		 36, 36, 36, 36, 36, 36,//HT
-		 20, 20, 20, 20, 20, 20,//MET
-		 8, 8, //NumVetoLeptons
-		 24, 24, //MT
-		 20, 20, 20, 20, 20, 20, //pt of veto and RA4 leptons
-		 34, 23, 30, 40, 40, 40};//pt of jets
-  double limits[][2] = {{.5,14.5},{0.5,14.5},//NumGoodJets
-			{0,1800},{0,1800},{0,1800},{0,1800},{0,1800},{0,1800},//HT
-			{0,1000},{0,1000},{0,1000},{0,1000},{0,1000},{0,1000},//MET
-			{-0.5,7.5},{-0.5,7.5},//NumVetoLeptons
-			{0,600},{0,600},//MT
-			{0,400},{0,400},{0,400},{0,400},{0,400},{0,400},//pt of veto and RA4 leptons
-			{0,1320},{0,920},{0,600},{0,400},{0,400},{0,200}};//pt of jets
-  TString Variable[] = {"NumGoodJets_1l","NumGoodJets",
-			"HT_1l_3jets","HT_1l","HT","HT_1l_4jets","HT_1l_5jets","HT_3jets_", 
-			"MET_1l_3jets","MET_1l","MET","MET_1l_4jets","MET_1l_5jets","MET_3jets_",
-			"NumLeptonsVeto", "NumLeptonsRA4",
-			"MT_VetoLepton_1l_3jets","MT_RA4Lepton_1l_3jets", 
-			"pTVeto1Lepton_1l_3jets", "pTVeto1Lepton_1l","pTVeto1Lepton","pTVeto2Lepton", "pTRA41Lepton", "pTRA42Lepton",
-			"pT_firstjet", "pT_secondjet",  "pT_thirdjet", "pT_fourthjet",  "pT_fifthjet", "pT_all"};
-  TString hName; 
-  TString VarTitle[] = {"Number of Good Jets single lepton","Number of Good Jets",
-			"H_{T} single lepton, 3 jets","H_{T} single lepton,","H_{T}",
-			"H_{T} single lepton, 4 jets","H_{T} single lepton, 5 jets","H_{T} 3 jets", 
-			"MET single lepton, 3 jets", "MET single lepton,","MET","MET single lepton, 4 jets",
-			"MET single lepton, 5 jets","MET 3 jets","Number of Veto Leptons", 
-			"Number of RA4 Leptons", "M_{T} of Veto Lepton","M_{T} of RA4 Lepton", 
-			"p_{T} of the highest p_{T} Veto Lepton: single lepton, 3 jets", 
-			"p_{T} of the highest p_{T} Veto Lepton: single lepton",  
-			"p_{T} of the highest p_{T} Veto Lepton",  
-			"p_{T} of the second highest p_{T} Veto Lepton", 
-			"p_{T} of the highest p_{T} RA4 Lepton", "p_{T} of the second highest p_{T} RA4 Lepton", 
-			"p_{T} of first jet", "p_{T} of second jet",  "p_{T} of third jet", 
-			"p_{T} of fourth jet",  "p_{T} of fifth jet", "p_{T} of all jets"};
-  TCanvas can("can","8 TeV Vs 13/14 TeV comparison");
-  float ptThresh[] = {30, 35, 40, 45, 50, 60, 70};
-  TH1F* hVar[NVar][Nthresh];
-  cout<<"open eventhandler"<<endl;
-  for(int iThresh=0;iThresh<Nthresh;iThresh++){
-    for(int iVariable(0); iVariable< NVar; ++iVariable){
-      if(iThresh>0 && iVariable >= 21) continue;
-      hName= Variable[iVariable]; hName += "_"; hName += ptThresh[iThresh];  
-      hVar[iVariable][iThresh] = new TH1F(hName,VarTitle[iVariable],Nbins[iVariable], limits[iVariable][0], limits[iVariable][1]);
-    }
-  }
-  cout<<"Starting loop over entries"<<endl;
-  
-  Timer timer(Nentries);
-  timer.Start();
-  for(int i(0); i<Nentries; ++i){
-    if(i%1000==0 && i!=0){
-      timer.PrintRemainingTime();
-    }
-    timer.Iterate();
-    GetEntry(i);
-    if(! PassesPVCut()) continue;
-    bool isElectron; 
-    for(int iThresh=0;iThresh<Nthresh;iThresh++){
-      for(int iVariable(0); iVariable< NVar; ++iVariable ){
-	double ValVariable(0); 
-	//cout<<"event "<<i<<", threshold "<<iThresh<<", Variable "<<iVariable
-	//<<", # of jets "<<jets_AK5PF_pt->size()
-	//<<", # of beta "<<beta.size()<<endl; 
-	if(iThresh>0 && iVariable >= 21) continue;
-	switch(iVariable){
-	case 0: 
-	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue; 
-	case 1:
-	  ValVariable= GetNumGoodJets(ptThresh[iThresh]);
-	  break;      
-	case 2:	 
-	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
-	case 3:	 
-	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue;
-	case 4: 
-	  ValVariable=GetHT(false,false);
-	  break;
-	case 5:
-	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=4))
-	    continue;
-	  ValVariable=GetHT(false,false);
-	  break;
-	case 6:
-	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=5))
-	    continue;
-	  ValVariable=GetHT(false,false);
-	  break;
-	case 7:
-	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
-	  ValVariable=GetHT(false,false);
-	  break;
-	case 8:	 
-	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
-	case 9:	 
-	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1)) continue;
-	case 10: 
-	  if(pfmets_et->size()<=0) continue;
-	  else ValVariable= pfmets_et->at(0);
-	  break;
-	case 11:
-	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=4))
-	    continue;
-	  if(pfmets_et->size()<=0) continue;
-	  else ValVariable= pfmets_et->at(0);
-	  break;
- 	case 12:
-	  if(!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=5)) 
-	    continue;
-	  if(pfmets_et->size()<=0) continue;
-	  else ValVariable= pfmets_et->at(0);
-	  break;
-	case 13:
-	  if(!(GetNumGoodJets(ptThresh[iThresh])>=3)) continue;
-	  if(pfmets_et->size()<=0) continue;
-	  else ValVariable= pfmets_et->at(0);
-	  break;	 
-	case 14:
-	  ValVariable=GetNumVetoLeptons();
-	  break;
-	case 15:
-	  ValVariable=GetNumRA4Leptons();
-	  break;
-	case 16:
-	  if (!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=3))
-	    continue;
-	  ValVariable=GetVetoLeptonMt();
-	  break;
-	case 17:
- 	  if (!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1 && GetNumGoodJets(ptThresh[iThresh])>=3))
-	    continue;
-	  ValVariable=GetRA4LeptonMt();
-	  break;
-	case 18:
- 	  if (!(GetNumGoodJets(ptThresh[iThresh])>=3))
-	    continue;
-	case 19:
- 	  if (!(GetNumVetoLeptons()==1 && GetNumRA4Leptons()==1))
-	    continue;
-	case 20:
-	  ValVariable=GetVetoLeptonPt(1, isElectron);
-	  break;
-	case 21:
-	  ValVariable=GetVetoLeptonPt(2, isElectron);
-	  break;
-	case 22:
-	  ValVariable=GetRA4LeptonPt(1, isElectron);
-	  break;
-	case 23:
-	  ValVariable=GetRA4LeptonPt(2, isElectron);
-	  break;
-	case 24: 
-	  if(jets_AK5PF_pt->size()<=0 || !( isGoodJet(0, true, 0, 2.4, true))) continue;
-	  else ValVariable= jets_AK5PF_pt->at(0);	
-	  break; 
-	case 25: 
-	  if(jets_AK5PF_pt->size()<=1 || !(isGoodJet(1, true, 0, 2.4, true))) continue;
-	  else ValVariable= jets_AK5PF_pt->at(1);
-	  break; 
-	case 26: 
-	  if(jets_AK5PF_pt->size()<=2 ||!( isGoodJet(2, true, 0, 2.4, true))) continue;
-	  else ValVariable= jets_AK5PF_pt->at(2);
-	  break; 
-	case 27: 
-	  if(jets_AK5PF_pt->size()<=3 ||!(isGoodJet(3, true, 0, 2.4, true))) continue;
-	  else ValVariable= jets_AK5PF_pt->at(3);
-	  break; 
-	case 28: 
-	  if(jets_AK5PF_pt->size()<=4 ||!( isGoodJet(4, true, 0, 2.4, true))) continue;
-	  else ValVariable= jets_AK5PF_pt->at(4);
-	  break; 
-	case 29:  
-	  for(unsigned int ijets(0); ijets<jets_AK5PF_pt->size(); ++ijets){
-	    if(isGoodJet(ijets, true, 0, 2.4, true)){
-	      hVar[iVariable][iThresh]->Fill(jets_AK5PF_pt->at(ijets));
-	    }
-	  }
-	  continue;
-	  break;	
-	} // Switch iVariable 
-	hVar[iVariable][iThresh]->Fill(ValVariable);
-      }// Loop over all variables
-    }//Loop over ptThresh ends
-  }// Loop over all events
-   
-  
-  //cout<<"Finished looping over events"<<endl;
-  file.Write();
-  file.Close();
-  cout<<"Finished saving file "<<outFileName<<endl;
-    
 }
 
 void EventHandler::MakePlots(const std::string &outFileName){
@@ -2425,6 +2547,7 @@ bool EventHandler::isGoodJet(const unsigned int ijet, const bool jetid, const do
   if(GetcfAVersion()<69||sampleName.find("SMS-TChiHH")!=std::string::npos) return true;
   //if(!betaUpToDate) GetBeta();
   //if(beta.at(ijet)<0.2 && doBeta) return false;
+  if(doBeta) return true; // Avoid warning
   return true;
 }
 
@@ -2573,18 +2696,18 @@ bool EventHandler::isVetoTau(const unsigned int k) const{
   return true;
 }
 
-int EventHandler::GetNumRA4Electrons() const{
+int EventHandler::GetNumRA4Electrons(double iso_cut) const{
   int count(0);
   for(unsigned int i(0); i<pf_els_pt->size(); ++i){
-    if(isRA4Electron(i)) ++count;
+    if(isRA4Electron(i, iso_cut)) ++count;
   }
   return count;
 }
   
-int EventHandler::GetNumRA4Muons() const{
+int EventHandler::GetNumRA4Muons(double iso_cut) const{
   int count(0);
   for(unsigned int i(0); i<pf_mus_pt->size(); ++i){
-    if(isRA4Muon(i)) ++count;
+    if(isRA4Muon(i, iso_cut)) ++count;
   }
   return count;
 }
