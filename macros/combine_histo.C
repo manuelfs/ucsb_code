@@ -42,11 +42,12 @@ void combine_histo(){
 			  "raw_plots_and_values/TTbar_TuneZ2star_13TeV-pythia6-tauola_Summer13dr53X-PU45bx25_START53_V19D-v2_AODSIM_UCSB1933_v71_.root",
 			  "raw_plots_and_values/SMS-MadGraph_Pythia6Zstar_8TeV_T1tttt_2J_mGo-1100to1400_mLSP-525to1000_25GeVX25GeV_Binning_Summer12-START52_V9_FSIM-v2_AODSIM_UCSB1739reshuf_v68_1150_800_.root",
 			  "raw_plots_and_values/SMS-T1tttt_2J_mGo-845to3000_mLSP-1to1355_TuneZ2star_14TeV-madgraph-tauola_Summer12-START53_V7C_FSIM_PU_S12-v1_AODSIM_UCSB1949reshuf_v71_1145_800.root", 
-"raw_plots_and_values/SMS-T1tttt_2J_mGo-845to3000_mLSP-1to1355_TuneZ2star_14TeV-madgraph-tauola_Summer12-START53_V7C_FSIM_PU_S12-v1_AODSIM_UCSB1949reshuf_v71_1145_500.root"};
+			  "raw_plots_and_values/SMS-T1tttt_2J_mGo-845to3000_mLSP-1to1355_TuneZ2star_14TeV-madgraph-tauola_Summer12-START53_V7C_FSIM_PU_S12-v1_AODSIM_UCSB1949reshuf_v71_1145_500.root"};
   
-  TString tagNames[] = {"ttbar_ll_8TeV", "ttbar_hh_8TeV", "ttbar_lh_8TeV", "ttbar_13TeV",
-			"T1tttt_8TeV", "T1tttt_14TeV_1145_800", "T1tttt_14TeV_1145_500"}, Pname;
-  TString legNames[] = {"ttbar_ll_8TeV", "ttbar_hh_8TeV", "t#bar{t} @ 8 TeV ", "t#bar{t} @ 13 TeV ","T1tttt(1150,800) @ 8 TeV ","T1tttt(1145,800) @ 14 TeV ", "T1tttt(1145,500) @ 14 TeV "};
+  // TString tagNames[] = {"ttbar_ll_8TeV", "ttbar_hh_8TeV", "ttbar_lh_8TeV", "ttbar_13TeV",
+  // 			"T1tttt_8TeV", "T1tttt_14TeV_1145_800", "T1tttt_14TeV_1145_500"};
+  TString legNames[] = {"ttbar_ll_8TeV", "ttbar_hh_8TeV", "t#bar{t} @ 8 TeV ", "t#bar{t} @ 13 TeV ",
+			"T1tttt(1150,800) @ 8 TeV ","T1tttt(1145,800) @ 14 TeV ", "T1tttt(1145,500) @ 14 TeV "}, Pname;
   TFile *file[NFiles];
   for(int iFiles(0); iFiles < NFiles; iFiles++){
     //    cout<<"Opening "<<FileNames[iFiles]<<endl;
@@ -79,23 +80,21 @@ void combine_histo(){
     VarName = obj_name;
     xTitle = "";
     texName = "";
-    if(VarName.Contains("NumGoodJets")) {xTitle = "Number of Good Jets "; texName = "$\\bf{\\left<N_j \\right>} $";};
     if(VarName.Contains("HT")) {xTitle = "H_{T} "; texName = "$\\bf{\\left<H_T \\right>} \\mathbf{(GeV)}$";};
     if(VarName.Contains("MET")) {xTitle = "E_{T,miss} ";  texName = "$\\bf{\\left<E_{T,miss} \\right>} \\mathbf{(GeV)}$";};
-    if(VarName.Contains("NumLeptonsVeto")) {xTitle = "Number of Veto Leptons "; texName = "$\\bf{\\left<N_veto \\right>} $";};
-    if(VarName.Contains("NumLeptonsRA4")) {xTitle = "Number of RA4 Leptons"; texName ="$\\bf{\\left<N_RA4 \\right>} $"; };
     if(VarName.Contains("MT"))  {xTitle = "M_{T} "; texName = "$\\bf{\\left<M_T \\right>} \\mathbf{(GeV)}$";};
     if(VarName.Contains("pTRA41"))  {xTitle = "p_T of First RA4 Lepton "; texName = "$\\bf{\\left<p_T \\right>} \\mathbf{(GeV)}$";};
     if(VarName.Contains("pTVeto1")) { xTitle = "p_{T} of First Veto Lepton "; texName = "$\\bf{\\left<p_T \\right>} \\mathbf{(GeV)}$";};
     if(VarName.Contains("pTRA42")) {xTitle = "p_{T} of Second RA4 Lepton "; texName = "$\\bf{\\left<p_T \\right>} \\mathbf{(GeV)}$";};
     if(VarName.Contains("pTVeto2")){ xTitle = "p_{T} of Second Veto Lepton "; texName = "$\\bf{\\left<p_T \\right>} \\mathbf{(GeV)}$";};
     if(VarName.Contains("pT_")) {xTitle = "p_{T} "; texName = "$\\bf{\\left<p_T \\right>} \\mathbf{(GeV)}$";};
-    if(!VarName.Contains("Num")) xTitle+="(GeV)";				   
-    //if(VarName.Contains("_1l"))  Title+= "Single Lepton ";
-    // if(VarName.Contains("3jets_"))  Title+= " 3 Jets ";
-    // if(VarName.Contains("l_3jets"))  Title+= " and 3 Jets ";
-    // if(VarName.Contains("l_4jets"))  Title+= " and 4 jets ";
-    // if(VarName.Contains("l_5jets"))  Title+= " and 5 jets ";
+    xTitle+="(GeV)";
+				   
+    if(VarName.Contains("NumLeptonsVeto")) {xTitle = "Number of Veto Leptons "; texName = "$\\bf{\\left<N_veto \\right>} $";};
+    if(VarName.Contains("NumLeptonsRA4")) {xTitle = "Number of RA4 Leptons"; texName ="$\\bf{\\left<N_RA4 \\right>} $"; };
+    if(VarName.Contains("NumGoodJets")) {xTitle = "Number of Good Jets "; texName = "$\\bf{\\left<N_j \\right>} $";};
+    if(VarName.Contains("Iso")) {xTitle = "Relative isolation"; texName = "$\\bf{\\left<Iso_{\\rm rel} \\right>} $";};
+    if(VarName.Contains("PU")) {xTitle = "Number of true interactions"; texName = "$\\bf{\\left<N_{\\rm Vert} \\right>} $";};
 
     double maxhisto(0), means[NFiles];  
     TLegend leg(0.45,0.65,0.96,0.90);
@@ -127,6 +126,11 @@ void combine_histo(){
 	yTitle+= RoundNumber(hFile[iFiles].GetBinWidth(1), 0);
 	yTitle+=" GeV)";
       }
+      if(VarName.Contains("Iso")){				   
+	yTitle+="/ (";
+	yTitle+= RoundNumber(hFile[iFiles].GetBinWidth(1), 2);
+	yTitle+=")";
+      }
       hFile[iFiles].SetTitle(Title);
       hFile[iFiles].SetXTitle(xTitle);
       hFile[iFiles].SetYTitle(yTitle);
@@ -140,16 +144,19 @@ void combine_histo(){
       means[iFiles] = hFile[iFiles].GetMean();
     } //Loop over all files
     //cout<<"Writing table"<<endl;   
+    int digits = 1;
+    if(VarName.Contains("Iso")) digits = 3;
     texFile << obj_name << endl;
     texFile << "\\begin{tabular}{c | ccc}\n \\hline\\hline\n"<<texName<<" & 8 TeV & 13/14 TeV & $\\Delta$ (\\%) \\\\"<<endl;
-    texFile << "\\hline\n $t\\bar{t}$ & "<< RoundNumber(means[2],1) << " & " << RoundNumber(means[3],1) << " & "<<
+    texFile << "\\hline\n $t\\bar{t}$ & "<< RoundNumber(means[2],digits) << " & " << RoundNumber(means[3],digits) << " & "<<
       RoundNumber((means[3]-means[2])*100, 1, means[2]) << "\\\\" << endl;
-    texFile << "T1tttt & "<< RoundNumber(means[4],1) << " & " << RoundNumber(means[5],1) << " & "<<
+    texFile << "T1tttt & "<< RoundNumber(means[4],digits) << " & " << RoundNumber(means[5],digits) << " & "<<
       RoundNumber((means[5]-means[4])*100, 1, means[4]) << "\\\\ \\hline\\hline" << endl;
     texFile << "\\end{tabular}"<<endl<<endl;
     for(int iFiles(0); iFiles < NFiles; iFiles++){
       if(iFiles==2){
 	hFile[iFiles].SetMaximum(1.2*maxhisto); 
+	if(VarName.Contains("PU")) hFile[iFiles].SetMaximum(100); 
 	hFile[iFiles].Draw("h");
       }else hFile[iFiles].Draw("same h");
     } //Loop over all files
@@ -159,6 +166,7 @@ void combine_histo(){
     can.SetLogy(0);    
     can.SaveAs(Pname);
     hFile[2].SetMaximum(20*maxhisto);    
+    if(VarName.Contains("PU")) hFile[2].SetMaximum(100); 
     can.SetLogy(1);
     hFile[2].SetMinimum(0.05);
     Pname.ReplaceAll(".pdf", "_log.pdf");

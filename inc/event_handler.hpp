@@ -86,8 +86,8 @@ private:
   int GetNumRA4Leptons() const;
   int GetNumRA4Electrons(const double pf_mus_rel_iso_cut= 0.20) const;
   int GetNumRA4Muons(const double pf_mus_rel_iso_cut= 0.10) const;
-  int GetRA4Electron(int nth_highest_pt=1) const;
-  int GetRA4Muon(int nth_highest_pt=1) const;
+  int GetRA4Electron(int nth_highest_pt=1, const double pf_mus_rel_iso_cut= 0.07) const;
+  int GetRA4Muon(int nth_highest_pt=1, const double pf_mus_rel_iso_cut= 0.10) const;
   float GetRA4LeptonPt(int nth_highest_pt, bool & isElectron) const;
   float GetRA4LeptonPhi(int nth_highest_pt=1) const;
   float GetRA4LeptonDeltaPhi(int nth_highest_pt=1) const;

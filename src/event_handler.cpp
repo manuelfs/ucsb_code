@@ -65,7 +65,7 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
 			{0,600},{0,600},//MT
 			{0,400},{0,400},{0,400},{0,400},{0,400},{0,400},//pt of veto and RA4 leptons
 			{0,1320},{0,920},{0,600},{0,400},{0,400},{0,200}, // pt of jets
-			{0,60}, {0,0.1}, {0,0.1}, {0,0.5}, {0,0.5}}; // PU, Isolation
+			{0,60}, {0,0.4}, {0,0.4}, {0,0.5}, {0,0.5}}; // PU, Isolation
   TString Variable[] = {"NumGoodJets_1l","NumGoodJets",
 			"HT_1l_3jets","HT_1l","HT","HT_1l_4jets","HT_1l_5jets","HT_3jets_", 
 			"MET_1l_3jets","MET_1l","MET","MET_1l_4jets","MET_1l_5jets","MET_3jets_",
@@ -267,8 +267,8 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
 	  ValVariable= PU_TrueNumInteractions->at(0);
 	  break; 
 	case 31:
-	  if(!(GetNumRA4Electrons(999)==1)) continue;
-	  ilepton = GetRA4Electron(1);
+	  if(!(GetNumRA4Electrons(999)>=1)) continue;
+	  ilepton = GetRA4Electron(1,999);
 	  if(ilepton<0) continue;
 	  deltaR=999.;
 	  imcdoc = GetTrueElectron(ilepton, deltaR);
@@ -278,8 +278,8 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
 	  ValVariable = GetElectronRelIso(ilepton);
 	  break; 
 	case 32:
-	  if(!(GetNumRA4Electrons(999)==1)) continue;
-	  ilepton = GetRA4Electron(1);
+	  if(!(GetNumRA4Electrons(999)>=1)) continue;
+	  ilepton = GetRA4Electron(1,999);
 	  if(ilepton<0) continue;
 	  deltaR=999.;
 	  imcdoc = GetTrueElectron(ilepton, deltaR);
@@ -289,8 +289,8 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
 	  ValVariable = GetElectronRelIso(ilepton);
 	  break; 
 	case 33:
-	  if(!(GetNumRA4Muons(999)==1)) continue;
-	  ilepton = GetRA4Muon(1);
+	  if(!(GetNumRA4Muons(999)>=1)) continue;
+	  ilepton = GetRA4Muon(1,999);
 	  if(ilepton<0) continue;
 	  deltaR=999.;
 	  imcdoc = GetTrueMuon(ilepton, deltaR);
@@ -300,8 +300,15 @@ void EventHandler::MakePlots13Tev( const std::string &outFileName, int Nentries)
 	  ValVariable = GetMuonRelIso(ilepton);
 	  break; 
 	case 34:
-	  if(!(GetNumRA4Muons(999)==1)) continue;
-	  ilepton = GetRA4Muon(1);
+	  if(!(GetNumRA4Muons(999)>=1)) continue;
+	  //cout<<endl;
+	  ilepton = GetRA4Muon(1,999);
+	  // cout<<"Fake ilepton "<<ilepton<<", Nmuons "<<GetNumRA4Muons(999)
+	  //     <<", size "<<pf_mus_pt->size()<<endl;
+	  // if(ilepton>=0) {
+	  //   cout<<"Iso "<<GetMuonRelIso(ilepton)<<", RA4 "<<isRA4Muon(ilepton)
+	  // 	<<", RA4_999 "<<isRA4Muon(ilepton,999)<<endl<<endl;
+	  // }
 	  if(ilepton<0) continue;
 	  deltaR=999.;
 	  imcdoc = GetTrueMuon(ilepton, deltaR);
@@ -2599,33 +2606,32 @@ bool EventHandler::isVetoElectron(const unsigned int k, const double pf_els_rel_
 }
 
 
-//Added function that gets RA4 electrons
-bool EventHandler::isRA4Electron(const unsigned int k, const double pf_els_rel_iso_cut) const{
-  //if(k>pf_else_pt->size()) return false;
-  if (fabs(pf_els_scEta->at(k)) >= 2.4 ) return false;
-  if (pf_els_pt->at(k) < 20) return false;
-  if(pf_els_isEB->at(k)){
-    if ( fabs(pf_els_dEtaIn->at(k)) > 0.004)  return false;
-    if ( fabs(pf_els_dPhiIn->at(k)) > 0.03)  return false;
-    if (pf_els_sigmaIEtaIEta->at(k) > 0.01) return false;
-    if (pf_els_hadOverEm->at(k) > 0.12) return false;
-  }else if(pf_els_isEE->at(k)){
-    if ( fabs(pf_els_dEtaIn->at(k)) > 0.009)  return false;
-    if ( fabs(pf_els_dPhiIn->at(k)) > 0.10)  return false;
-    if (pf_els_sigmaIEtaIEta->at(k) > 0.03) return false;
-  }else{
-    fprintf(stderr, "Warning: Electron is not in barrel or endcap.\n");
-    return false;
-  }
-  const double beamx(beamSpot_x->at(0)), beamy(beamSpot_y->at(0)); 
-  const double d0(pf_els_d0dum->at(k)-beamx*sin(pf_els_tk_phi->at(k))+beamy*cos(pf_els_tk_phi->at(k)));
-  if ( fabs(d0) >= 0.02 ) return false;
-  if ( fabs(pf_els_vz->at(k) - pv_z->at(0) ) >= 0.1 ) return false;
 
-  if(GetElectronRelIso(k)>=pf_els_rel_iso_cut) return false;
+bool EventHandler::isVetoMuon(const unsigned int k, const double pf_mus_rel_iso_cut) const{
+  if (fabs(pf_mus_eta->at(k)) >= 2.4 ) return false;
+  if (pf_mus_pt->at(k) < 15) return false;
+  if ( !pf_mus_id_GlobalMuonPromptTight->at(k)) return false;
+  // GlobalMuonPromptTight includes: isGlobal, globalTrack()->normalizedChi2() < 10, numberOfValidMuonHits() > 0
+  if ( pf_mus_numberOfMatchedStations->at(k) <= 1 ) return false;
+  const double beamx (beamSpot_x->at(0)), beamy(beamSpot_y->at(0));   
+  const double d0 = pf_mus_tk_d0dum->at(k)-beamx*sin(pf_mus_tk_phi->at(k))+beamy*cos(pf_mus_tk_phi->at(k));
+  const double pf_mus_vz = pf_mus_tk_vz->at(k);
+  const double pf_mus_dz_vtx = fabs(pf_mus_vz-pv_z->at(0));
+  if (fabs(d0)>=0.1 || pf_mus_dz_vtx>=0.5) return false;
+  if ( !pf_mus_tk_numvalPixelhits->at(k)) return false;
+  if ( pf_mus_tk_LayersWithMeasurement->at(k) <= 5 ) return false;
+  if ( GetMuonRelIso(k) > pf_mus_rel_iso_cut ) return false;
   return true;
 }
 
+
+
+bool EventHandler::isVetoTau(const unsigned int k) const{
+  if (taus_pt->at(k)<20) return false; // Updated 6/24
+  if (fabs(taus_eta->at(k)) > 2.4) return false;
+  if (taus_byLooseIsolationDeltaBetaCorr->at(k) <= 0) return false;
+  return true;
+}
 
 double EventHandler::GetElectronRelIso(const unsigned int k) const{
   const double rho(rho_kt6PFJetsForIsolation2012);
@@ -2653,23 +2659,32 @@ double EventHandler::GetMuonRelIso(const unsigned int k) const{
 
 }
 
-bool EventHandler::isVetoMuon(const unsigned int k, const double pf_mus_rel_iso_cut) const{
-  if (fabs(pf_mus_eta->at(k)) >= 2.4 ) return false;
-  if (pf_mus_pt->at(k) < 15) return false;
-  if ( !pf_mus_id_GlobalMuonPromptTight->at(k)) return false;
-  // GlobalMuonPromptTight includes: isGlobal, globalTrack()->normalizedChi2() < 10, numberOfValidMuonHits() > 0
-  if ( pf_mus_numberOfMatchedStations->at(k) <= 1 ) return false;
-  const double beamx (beamSpot_x->at(0)), beamy(beamSpot_y->at(0));   
-  const double d0 = pf_mus_tk_d0dum->at(k)-beamx*sin(pf_mus_tk_phi->at(k))+beamy*cos(pf_mus_tk_phi->at(k));
-  const double pf_mus_vz = pf_mus_tk_vz->at(k);
-  const double pf_mus_dz_vtx = fabs(pf_mus_vz-pv_z->at(0));
-  if (fabs(d0)>=0.1 || pf_mus_dz_vtx>=0.5) return false;
-  if ( !pf_mus_tk_numvalPixelhits->at(k)) return false;
-  if ( pf_mus_tk_LayersWithMeasurement->at(k) <= 5 ) return false;
-  if ( GetMuonRelIso(k) > pf_mus_rel_iso_cut ) return false;
+//Added function that gets RA4 electrons
+bool EventHandler::isRA4Electron(const unsigned int k, const double pf_els_rel_iso_cut) const{
+  //if(k>pf_else_pt->size()) return false;
+  if (fabs(pf_els_scEta->at(k)) >= 2.4 ) return false;
+  if (pf_els_pt->at(k) < 20) return false;
+  if(pf_els_isEB->at(k)){
+    if ( fabs(pf_els_dEtaIn->at(k)) > 0.004)  return false;
+    if ( fabs(pf_els_dPhiIn->at(k)) > 0.03)  return false;
+    if (pf_els_sigmaIEtaIEta->at(k) > 0.01) return false;
+    if (pf_els_hadOverEm->at(k) > 0.12) return false;
+  }else if(pf_els_isEE->at(k)){
+    if ( fabs(pf_els_dEtaIn->at(k)) > 0.009)  return false;
+    if ( fabs(pf_els_dPhiIn->at(k)) > 0.10)  return false;
+    if (pf_els_sigmaIEtaIEta->at(k) > 0.03) return false;
+  }else{
+    fprintf(stderr, "Warning: Electron is not in barrel or endcap.\n");
+    return false;
+  }
+  const double beamx(beamSpot_x->at(0)), beamy(beamSpot_y->at(0)); 
+  const double d0(pf_els_d0dum->at(k)-beamx*sin(pf_els_tk_phi->at(k))+beamy*cos(pf_els_tk_phi->at(k)));
+  if ( fabs(d0) >= 0.02 ) return false;
+  if ( fabs(pf_els_vz->at(k) - pv_z->at(0) ) >= 0.1 ) return false;
+
+  if(GetElectronRelIso(k)>=pf_els_rel_iso_cut) return false;
   return true;
 }
-
 
 bool EventHandler::isRA4Muon(const unsigned int k,  const double pf_mus_rel_iso_cut) const{
   if (fabs(pf_mus_eta->at(k)) >= 2.1 ) return false;
@@ -2682,17 +2697,9 @@ bool EventHandler::isRA4Muon(const unsigned int k,  const double pf_mus_rel_iso_
   const double pf_mus_vz = pf_mus_tk_vz->at(k);
   const double pf_mus_dz_vtx = fabs(pf_mus_vz-pv_z->at(0));
   if (fabs(d0)>=0.02 || pf_mus_dz_vtx>=1.0) return false;
+  if ( GetMuonRelIso(k) > pf_mus_rel_iso_cut ) return false;
   if ( pf_mus_tk_numvalPixelhits->at(k)>0) return true;
   if ( pf_mus_tk_LayersWithMeasurement->at(k) <= 8 ) return false;
-  if ( GetMuonRelIso(k) > pf_mus_rel_iso_cut ) return false;
-  return true;
-}
-
-
-bool EventHandler::isVetoTau(const unsigned int k) const{
-  if (taus_pt->at(k)<20) return false; // Updated 6/24
-  if (fabs(taus_eta->at(k)) > 2.4) return false;
-  if (taus_byLooseIsolationDeltaBetaCorr->at(k) <= 0) return false;
   return true;
 }
 
@@ -2713,18 +2720,18 @@ int EventHandler::GetNumRA4Muons(double iso_cut) const{
 }
 
 
-int EventHandler::GetRA4Electron(int nth_highest_pt) const{
+int EventHandler::GetRA4Electron(int nth_highest_pt, double iso_cut) const{
   int count(0);
   for(unsigned int i(0); i<pf_els_pt->size(); ++i){
-    if(isRA4Electron(i)) ++count;
+    if(isRA4Electron(i, iso_cut)) ++count;
     if(count==nth_highest_pt) return i;
   }
   return -1;
 }
-int EventHandler::GetRA4Muon(int nth_highest_pt) const{
+int EventHandler::GetRA4Muon(int nth_highest_pt, double iso_cut) const{
   int count(0);
   for(unsigned int i(0); i<pf_mus_pt->size(); ++i){
-    if(isRA4Muon(i)) ++count;
+    if(isRA4Muon(i, iso_cut)) ++count;
     if(count==nth_highest_pt) return i;
   }
   return -1;
